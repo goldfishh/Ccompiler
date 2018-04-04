@@ -1,0 +1,42 @@
+<program>
+  <globalDeclaration>
+    <FunctionDecl>
+      int      
+      main      
+      (      
+      )      
+      <bodyDecl>
+        {        
+        <statements>
+          <doStatement>
+            <routineCall>
+              printf              
+              (              
+              <expressionList>
+                <expression>
+                  <term>
+                    "Hello World!"                    
+                  </term>
+                </expression>
+              </expressionList>
+              )              
+              ;              
+            </routineCall>
+          </doStatement>
+        </statements>
+        <statements>
+          <returnStatement>
+            return            
+            <expression>
+              <term>
+                false                
+              </term>
+            </expression>
+            ;            
+          </returnStatement>
+        </statements>
+        }        
+      </bodyDecl>
+    </FunctionDecl>
+  </globalDeclaration>
+</program>

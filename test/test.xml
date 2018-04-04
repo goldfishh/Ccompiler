@@ -1,0 +1,475 @@
+<program>
+  <globalDeclaration>
+    <FunctionDecl>
+      <RESERVED_WORD>  int  </RESERVED_WORD>      
+      <IDENTIFIER>  main  </IDENTIFIER>      
+      <SYMBOL>  (  </SYMBOL>      
+      <parameterList>
+        <RESERVED_WORD>  int  </RESERVED_WORD>        
+        <IDENTIFIER>  a  </IDENTIFIER>        
+        <SYMBOL>  ,  </SYMBOL>        
+        <RESERVED_WORD>  int  </RESERVED_WORD>        
+        <IDENTIFIER>  b  </IDENTIFIER>        
+      </parameterList>
+      <SYMBOL>  )  </SYMBOL>      
+      <bodyDecl>
+        <SYMBOL>  {  </SYMBOL>        
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+          <IDENTIFIER>  i  </IDENTIFIER>          
+          <SYMBOL>  ,  </SYMBOL>          
+          <IDENTIFIER>  k  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+          <IDENTIFIER>  j  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+          <IDENTIFIER>  a  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+          <SYMBOL>  *  </SYMBOL>          
+          <IDENTIFIER>  p  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+          <SYMBOL>  *  </SYMBOL>          
+          <SYMBOL>  *  </SYMBOL>          
+          <IDENTIFIER>  q  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  int  </RESERVED_WORD>          
+        SemanticsERROR, Redifining the variable: a
+          <IDENTIFIER>  a  </IDENTIFIER>          
+          <SYMBOL>  [  </SYMBOL>          
+          <INT_CONST>  2  </INT_CONST>          
+          <SYMBOL>  ]  </SYMBOL>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <variableDecl>
+          <RESERVED_WORD>  char  </RESERVED_WORD>          
+          <IDENTIFIER>  c  </IDENTIFIER>          
+          <SYMBOL>  ;  </SYMBOL>          
+        </variableDecl>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  a  </IDENTIFIER>              
+            <SYMBOL>  [  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  0  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ]  </SYMBOL>            
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  0  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  a  </IDENTIFIER>              
+            <SYMBOL>  [  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  1  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ]  </SYMBOL>            
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  1  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  c  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <CHAR_CONST>  'c'  </CHAR_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  p  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <SYMBOL>  &amp;  </SYMBOL>                
+                <term>
+                    <IDENTIFIER>  a  </IDENTIFIER>                    
+                </term>
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  q  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <SYMBOL>  &amp;  </SYMBOL>                
+                <term>
+                    <IDENTIFIER>  p  </IDENTIFIER>                    
+                </term>
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  j  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <SYMBOL>  *  </SYMBOL>                
+                <term>
+                    <IDENTIFIER>  p  </IDENTIFIER>                    
+                </term>
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  i  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <SYMBOL>  *  </SYMBOL>                
+                <term>
+                  <SYMBOL>  *  </SYMBOL>                  
+                  <term>
+                      <IDENTIFIER>  q  </IDENTIFIER>                      
+                  </term>
+                </term>
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  i  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  1  </INT_CONST>                
+              </term>
+              <SYMBOL>  +  </SYMBOL>              
+              <term>
+                <SYMBOL>  (  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  j  </IDENTIFIER>                      
+                  </term>
+                  <SYMBOL>  -  </SYMBOL>                  
+                  <term>
+                      <IDENTIFIER>  i  </IDENTIFIER>                      
+                  </term>
+                </expression>
+                <SYMBOL>  )  </SYMBOL>                
+              </term>
+              <SYMBOL>  +  </SYMBOL>              
+              <term>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+                <SYMBOL>  [  </SYMBOL>                
+                <expression>
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ]  </SYMBOL>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <letStatement>
+              <IDENTIFIER>  j  </IDENTIFIER>              
+            <SYMBOL>  =  </SYMBOL>            
+            <expression>
+              <term>
+                <INT_CONST>  2  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </letStatement>
+        </statements>
+        <statements>
+          <ifStatement>
+            <RESERVED_WORD>  if  </RESERVED_WORD>            
+            <SYMBOL>  (  </SYMBOL>            
+            <expression>
+              <term>
+                <SYMBOL>  (  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  i  </IDENTIFIER>                      
+                  </term>
+                  <SYMBOL>  +  </SYMBOL>                  
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  )  </SYMBOL>                
+              </term>
+              <SYMBOL>  /  </SYMBOL>              
+              <term>
+                <INT_CONST>  2  </INT_CONST>                
+              </term>
+              <SYMBOL>  ==  </SYMBOL>              
+              <term>
+                <SYMBOL>  (  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  j  </IDENTIFIER>                      
+                  </term>
+                  <SYMBOL>  +  </SYMBOL>                  
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  )  </SYMBOL>                
+              </term>
+              <SYMBOL>  /  </SYMBOL>              
+              <term>
+                <INT_CONST>  2  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  )  </SYMBOL>            
+            <SYMBOL>  {  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  j  </IDENTIFIER>                  
+                <SYMBOL>  =  </SYMBOL>                
+                <expression>
+                  <term>
+                    <INT_CONST>  3  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ;  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <SYMBOL>  }  </SYMBOL>            
+          </ifStatement>
+        </statements>
+        <statements>
+          <forStatement>
+            <RESERVED_WORD>  for  </RESERVED_WORD>            
+            <SYMBOL>  (  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+                <SYMBOL>  =  </SYMBOL>                
+                <expression>
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ;  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <expression>
+              <term>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+              </term>
+              <SYMBOL>  &gt;  </SYMBOL>              
+              <term>
+                <INT_CONST>  10  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+                <SYMBOL>  ++  </SYMBOL>                
+                <SYMBOL>  )  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <SYMBOL>  {  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  j  </IDENTIFIER>                  
+                <SYMBOL>  =  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  i  </IDENTIFIER>                      
+                  </term>
+                </expression>
+                <SYMBOL>  ;  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <SYMBOL>  }  </SYMBOL>            
+          </forStatement>
+        </statements>
+        <statements>
+          <whileStatement>
+            <RESERVED_WORD>  while  </RESERVED_WORD>            
+            <SYMBOL>  (  </SYMBOL>            
+            <expression>
+              <term>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+              </term>
+              <SYMBOL>  &gt;  </SYMBOL>              
+              <term>
+                <INT_CONST>  10  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  )  </SYMBOL>            
+            <SYMBOL>  {  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  j  </IDENTIFIER>                  
+                <SYMBOL>  =  </SYMBOL>                
+                <expression>
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ;  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <statements>
+              <RESERVED_WORD>  continue  </RESERVED_WORD>              
+              <SYMBOL>  ;  </SYMBOL>              
+            </statements>
+            <SYMBOL>  }  </SYMBOL>            
+          </whileStatement>
+        </statements>
+        <statements>
+          <whileStatement>
+            <RESERVED_WORD>  do  </RESERVED_WORD>            
+            <SYMBOL>  {  </SYMBOL>            
+            <statements>
+              <letStatement>
+                  <IDENTIFIER>  j  </IDENTIFIER>                  
+                <SYMBOL>  =  </SYMBOL>                
+                <expression>
+                  <term>
+                    <INT_CONST>  1  </INT_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ;  </SYMBOL>                
+              </letStatement>
+            </statements>
+            <SYMBOL>  }  </SYMBOL>            
+            <RESERVED_WORD>  while  </RESERVED_WORD>            
+            <SYMBOL>  (  </SYMBOL>            
+            <expression>
+              <term>
+                  <IDENTIFIER>  a  </IDENTIFIER>                  
+              </term>
+              <SYMBOL>  &gt;  </SYMBOL>              
+              <term>
+                <INT_CONST>  10  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  )  </SYMBOL>            
+            <SYMBOL>  ;  </SYMBOL>            
+          </whileStatement>
+        </statements>
+        <statements>
+          <doStatement>
+            <routineCall>
+                <IDENTIFIER>  scanf  </IDENTIFIER>                
+              <SYMBOL>  (  </SYMBOL>              
+              <expressionList>
+                <expression>
+                  <term>
+                    <STRING_CONST>  "%d %d"  </STRING_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ,  </SYMBOL>                
+                <expression>
+                  <term>
+                    <SYMBOL>  &amp;  </SYMBOL>                    
+                    <term>
+                        <IDENTIFIER>  i  </IDENTIFIER>                        
+                    </term>
+                  </term>
+                </expression>
+                <SYMBOL>  ,  </SYMBOL>                
+                <expression>
+                  <term>
+                    <SYMBOL>  &amp;  </SYMBOL>                    
+                    <term>
+                        <IDENTIFIER>  j  </IDENTIFIER>                        
+                    </term>
+                  </term>
+                </expression>
+              </expressionList>
+              <SYMBOL>  )  </SYMBOL>              
+            </routineCall>
+            <SYMBOL>  ;  </SYMBOL>            
+          </doStatement>
+        </statements>
+        <statements>
+          <doStatement>
+            <routineCall>
+                <IDENTIFIER>  printf  </IDENTIFIER>                
+              <SYMBOL>  (  </SYMBOL>              
+              <expressionList>
+                <expression>
+                  <term>
+                    <STRING_CONST>  "i=%d,j=%d"  </STRING_CONST>                    
+                  </term>
+                </expression>
+                <SYMBOL>  ,  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  i  </IDENTIFIER>                      
+                  </term>
+                </expression>
+                <SYMBOL>  ,  </SYMBOL>                
+                <expression>
+                  <term>
+                      <IDENTIFIER>  i  </IDENTIFIER>                      
+                  </term>
+                </expression>
+              </expressionList>
+              <SYMBOL>  )  </SYMBOL>              
+            </routineCall>
+            <SYMBOL>  ;  </SYMBOL>            
+          </doStatement>
+        </statements>
+        <statements>
+          <returnStatement>
+            <RESERVED_WORD>  return  </RESERVED_WORD>            
+            <expression>
+              <term>
+                <INT_CONST>  0  </INT_CONST>                
+              </term>
+            </expression>
+            <SYMBOL>  ;  </SYMBOL>            
+          </returnStatement>
+        </statements>
+        <SYMBOL>  }  </SYMBOL>        
+      </bodyDecl>
+    </FunctionDecl>
+  </globalDeclaration>
+</program>

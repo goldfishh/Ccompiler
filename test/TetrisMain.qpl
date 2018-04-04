@@ -1,0 +1,15 @@
+/*
+    int main()
+    {
+        initialization();
+        Sleep(1000);
+        round();
+        return 0;
+    }
+*/
+
+    (label, main, -, -)
+    (call, initialization, params, -)
+    (Sleep, 1000, -, -)
+    (call, round, params, -)
+    (return, params, -, -)  # 这里需要返回到原来调用位置

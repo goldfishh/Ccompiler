@@ -1,0 +1,57 @@
+/*
+    void initialization()
+    {
+        int i;
+        int j;
+        printf("俄罗斯方块\n");
+        printf("请输入游戏难度\n1 简单   2 普通   3困难   4地狱\n");
+        scanf("%d", &mode);
+        if (mode == 1)
+        {
+            modetime = 100;
+        }
+        if (mode == 2)
+        {
+            modetime = 60;
+        }
+        if (mode == 3)
+        {
+            modetime = 20;
+        }
+        if (mode == 4)
+        {
+            modetime = 1;
+        }
+        for (i = 0; i < 20; ++i)
+        {
+            for (j = 0; j < 10; ++j)
+            {
+                board[i][j] = 0;
+            }
+        }
+        srand(time(0));
+        firstblock = rand() % 7 + 1;
+        block = 0;
+        nextblock = 0;
+        gamejudge = 1;
+        roundcount = 0;
+        count = 0;
+        dropjudge = 0;
+        show();
+    }
+*/
+
+    (label, initialization, -, -)
+    (printf, "俄罗斯方块\n", params, -)
+    (printf, "请输入游戏难度\n1 简单   2 普通   3困难   4地狱\n", params, -)
+    (scanf, "%d", -, &mode)  #
+
+    (==, mode, 1, TMP1)
+    (jmp, initialization_if_1, initialization_else_1, TMP1)
+    (label, initialization_if_1, -, -)
+    (term, 100, -, TMP2)
+    (=, TMP2, -, modetime)
+    (jmp, initialization_ifend_1, -, 1)
+    (label, initialization_else_1, -, -)
+    (label, initialization_ifend_1, -, -)
+

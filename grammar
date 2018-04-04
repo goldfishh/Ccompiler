@@ -1,0 +1,175 @@
+﻿类C语法定义:
+
+1.不含预处理, 常用标准库函数转换为虚拟机指令
+(1) #include    
+(2) #ifdef  #endif  #ifndef #endif
+(3) !!!   保留#define功能  !!!
+
+2.去掉若干保留字
+auto register union volatile 
+unsigned signed
+extern static const
+switch case default
+float short long
+
+2.1 保留剩下字17个, 新增3个
+变量类型: double int char struct void enum
+流程控制: if else for continue break while 
+          goto do return
+特殊函数: sizeof
+变量别名: typedef
+※※※新增: true, false, string
+
+2.变量先声明后使用,包括:
+(1) 全局变量声明必须在函数使用前, 且不能同时初始化
+(2) 函数内部变量申明统一安排在函数前部,且不能同时初始化
+(3) 结构体、枚举类型只允许在函数外部声明
+(4) 嵌套{yy{xx}},内嵌套可声明变量(符号表栈式管理)
+(5) typedef只允许在main函数外使用
+
+3.整数变量属性:
+  int: 只有十进制无符号形式, N(unlimited)位
+4.浮点数变量属性:
+  double: 只有十进制无符号形式, N(unlimited)精度
+5.字符与字符串变量属性:
+  char:
+  string:
+6.结构体:
+  struct Name{
+	type VarName;
+	......
+  }
+7.枚举 <==> #define:
+  enum Name{
+	identifier,  < == > #define identifer 0
+	ink = 10, < == > #define ink 10
+  }
+{  ...  }+  <==> ...+
+{  ...  }*  <==> ...*
+[  ...  ]   <==> ...?
+
+8.运算符优先级, 结合性暂不考虑
+默认(...)优先级高, 默认左结合
+8.1
+ a = b = c;
+ < == > (a = b) = c;
+ < == > a = b; a = c;
+8.2
+ x > y ? 100 : ++y > 2 ? 20 : 30
+
+9. 强类型语言, 不强制转换, 不被动转换类型, 变量类型不一致即抛错 
+
+10. 考虑 删除自增、自减 运算符, 或者简化运算
+
+
+数组待补充
+
+program ::= {global_declaration}+
+ 
+global_declaration ::= enum_decl | variable_decl | function_decl | struct_decl
+                     | typedef_decl
+					 
+枚举声明(不支持省略枚举名、声明变量)
+enum_decl ::= 'enum' varName '{' identifyName ['=' 'num'] {',' identifyName ['=' 'num'] }+ '}' ';'
+
+变量声明 
+variable_decl ::= type {'*'}* varName ['[' expression ']'] { ',' ['*'] varName ['[' expression ']'] }* ';'
+
+函数:
+function_decl ::=  type {'*'}* routinueName '(' parameterList ')' ';' 
+				 | type {'*'}* routinueName '(' parameterList ')' body_decl 
+
+结构体声明(不支持省略结构体名、声明变量):
+struct_decl ::= 'struct' varName '{' { variable_decl }+ '}' ';'
+
+typedef_decl ::= 'typedef' type {'*'}* 标识符 {',' {'*'}* 标识符 }*
+
+routinueName = 标识符
+varName = 标识符
+
+type ::= singletype | doubletype
+singletype ::= 'int' |'double' |'char' |'string' |'struct' |'enum' |'void'
+doubletype ::= 'struct' varName | 'enum' varName
+
+函数参数(形参, 实参) 
+parameterList ::= type {'*'} varName ['[' ']']  {',' type {'*'} varName ['[' ']'] }*
+
+!!! 与C不一样, 这里为了简便 将变量声明都放在语句前面 !!!
+body_decl ::= '{' {variable_decl}* {statement}* '}'
+
+statement ::= ifStatement|whileStatement|returnStatement
+			 |forStatement
+			 |blockStatement({})
+			 |gotoStatement
+			 # 向前看
+			 |label ':' statement 
+			 |letStatement(赋值) | doStatement(调用)
+
+#只支持'='赋值
+letStatement ::= varName ['['expression']'] '=' expression ';'
+
+doStatement ::= RoutineCall
+
+#不支持去大括号
+ifStatement ::= 'if' '(' expression ')' '{' statements '}'
+				[ 'else'  '{' statements '}' ]
+#不支持去大括号
+whileStatement ::= 'while' '(' expression ')' '{' statements '}'
+                 | 'do' '{' statements '}' 'while' '(' expression ')' ';'
+returnStatement ::= 'return' [expression] ';'
+
+#不支持去大括号
+# 语义分析 检查形参 实参 一致性
+forStatement ::= 'for' '(' [expression] ';' [expression] ';' [expression] ';' ')' '{' statements '}'
+
+blockStatement ::= '{' body_decl '}'
+
+gotoStatement ::= 'goto' label ';'
+
+※※※※※
+label ::= 识别未知的普通标识符
+
+
+FIRST(expression) = {FIRST(term)}
+FOLLOW(expression) = {';' ')' ',' ']' }
+FOLLOW(term) = { op , FOLLOW(expression) }
+expression ::= term [op term]*
+
+
+ 
+
+
+FIRST(term) = {INT_CONST, FLOAT_CONST, CHAR_CONST, STRING_CONST
+			   BOOL_CONST, varName/RoutineName}
+  
+FOLLOW(varName) = {'[' rightunaryop '?' op FIRST(term) }
+FOLLOW(expression) = {}
+
+term ::=  INT_CONST                             
+		| FLOAT_CONST           
+		| CHAR_CONST          
+		| STRING_CONST             
+		| BOOL_CONST              
+	    | varName                         
+		| varName     '[' expression ']' 
+		| RoutineCall
+
+		
+FOLLOW(expressionList) = {')'}	
+RoutineCall ::= RoutineName '('  expressionList ')'
+		
+FIRST(expressionList) = {空, INT_CONST, FLOAT_CONST, CHAR_CONST, 
+						STRING_CONST, BOOL_CONST, varName/RoutineName}
+
+expressionList ::= [ expression [',' expression]* ] 
+
+
+op ::= arithop | cmpop
+
+arithop ::= '+' | '-' | '*' | '/' | '%' | '&&' | '||' | '&' | '|' | '^' | '<<' | '>>'
+
+cmpop ::= '>' | '<' | '==' | '>=' | '<=' | '!='
+
+leftunaryop ::= '-' | '+' | '!' | '++' | '--'
+
+BOOL_CONST ::= 'true' | 'false'

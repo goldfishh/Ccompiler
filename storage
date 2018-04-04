@@ -1,0 +1,12 @@
+# 3.19 删去 ? : 运算符 单目右运算符
+FIRST(Threecase) = {'?'}
+FOLLOW(Threecase) = {}
+Threecase ::= [op term]* '?' expression ':' expression
+
+FIRST(term') = {rightunaryop, op, '?', 空}
+FOLLOW(term') = {}
+term' ::= rightunaryop term;
+		| 空
+		
+FOLLOW(rightunaryop) = {}
+rightunaryop ::= '++' | '--'

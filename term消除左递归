@@ -1,0 +1,27 @@
+term ::=  INT_CONST 
+		| FLOAT_CONST 
+		| CHAR_CONST 
+		| STRING_CONST 
+		| BOOL_CONST
+	    | '(' expression ')' 
+		| leftunaryOp term 
+	    # 左递归
+	    | term rightunaryop 
+	    | term [op term]* '?' expression ':' expression
+	    # 向前看
+	    | varName 
+		| varName     '[' expression ']' 
+		| RoutineName '('  expressionList ')'
+		
+term ::=  INT_CONST                              term'
+		| FLOAT_CONST                            term' 
+		| CHAR_CONST                             term' 
+		| STRING_CONST                           term' 
+		| BOOL_CONST                             term'
+	    | varName                                term' 
+		| varName     '[' expression ']'         term' 
+		| RoutineName '('  expressionList ')'    term'	
+
+term' ::= rightunaryop term;
+		| [op term]* '?' expression ':' expression term'
+		| 空

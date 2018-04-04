@@ -1,0 +1,46 @@
+/*
+    #include "stdio.h"
+    #include "time.h"
+    #include "windows.h"
+    #include "stdlib.h"
+    #include "conio.h"
+    void initialization();   //初始化函数
+    void round();            //定义回合函数，用于初始化一回合生成随机数等
+    void show();             //定义显示函数
+    void control();          //定义操控函数
+    void drop();             //定义掉落函数（控制掉落，消去等）
+    void del();              //定义去除函数，用于消去
+    void check();            //定义检查函数，用于检查当前横向移动是否合理
+    void jturn();            //定义左旋转函数
+    void kturn();            //定义右旋转函数
+    void scan();             //定义扫描函数，扫描当前旋转中心以及其他方块坐标
+    void current();          //定义直降函数
+    void losecheck();        //定义游戏总判断函数
+    char step;               //定义控制变量，暂定ad左右,s加速，j左转，k右转,l直降
+    int amovecheck;          //定义左移动检查变量，用于检测当前控制是否成立
+    int dmovecheck;          //定义右移动检查变量，用于检测当前控制是否成立
+    int smovecheck;          //定义下移动检查变量，用于检测当前控制是否成立
+    int count;               //定义计时变量，暂定每100us计数一次，每到100掉落
+    int roundcount;          //定义回合计数变量
+    int score;               //定义分数计数变量
+    int mode;                //定义游戏难度，暂定简单1s，普通0.6s，困难0.2s
+    int modetime;            //定义难度对应时间间隔
+    int board[20][10];       //定义棋盘20*10，右侧用于显示其他项（此变量仅用于判断）
+    int gamejudge;           //定义游戏判断变量，用于判断游戏结束等
+    int firstblock;          //定义第一个方块种类
+    int block;               //定义方块种类，7种（利用█或■堆叠）
+    int nextblock;           //定义下一方块种类，7种
+    int dropjudge;           //定义掉落判断变量，用于判断是否能够顺利掉落
+    int o[2];                //定义旋转中心，即值为3的坐标
+    int point[3][2];         //定义其他方块，即值为2的坐标
+    int turncheck;           //定义旋转检查变量
+    int temp;                //定义旋转临时变量
+    int min;                 //定义直降临时变量，用于记录降落最小距离
+    int mintemp;             //定义直降临时计算变量，用于临时记录降落距离
+    int currentflag;         //定义直降判断变量，判断最底层是否有方块
+    int conti;               //定义重开变量
+*/
+
+#include "stdio.h"  => ignore
+void control();   => omit
+char step;   =>  (char,
