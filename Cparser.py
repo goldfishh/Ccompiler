@@ -1044,10 +1044,9 @@ class CompilationEngine:
 			if(next1 in self.arithop or next1 in self.cmpop):
 				operatorname = self.utility2()[1]
 				self.Advance(x+1)  # op
-
-				term2 = self.CompileTerm(x+1)
 				if(termnum != 1):
 					term1 = "TMP" + str(qplwriter.tempnum-1)
+				term2 = self.CompileTerm(x+1)
 				qplwriter.writearyop(operatorname, term1, term2)
 				termnum = termnum + 1
 				next1 = self.tokenizer.LL1()
@@ -1238,7 +1237,7 @@ from SymbolTable import SymbolTable
 from QuadrupleWriter import QuadrupleWriter
 if __name__ == '__main__':
 	os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser\test")
-	file = "Tetris.c"
+	file = "test1.c"
 
 	obj = C_Lexer(file)
 	obj.preScanner()
