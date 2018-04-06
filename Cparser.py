@@ -438,10 +438,6 @@ class CompilationEngine:
 			# 符号表维护
 			symboltable.variableStackPointer.append(symboltable.variableStackIterator)
 			symboltable.variableStackPointerIterator = symboltable.variableStackPointerIterator + 1
-			#计数器清零
-			self.now_ifnum = 0
-			self.now_whilenum = 0
-			self.now_fornum = 0
 			if(not original_content):
 				content['isused'] = True
 				symboltable.insert(function_name, content, 1)
@@ -643,14 +639,14 @@ class CompilationEngine:
 		self.utility(x, "<statements>\n")
 		next1 = self.tokenizer.LL1()
 		if(next1 == "if"):
-			self.CompileIf(x+1)
 			self.now_ifnum = self.now_ifnum + 1
+			self.CompileIf(x+1)
 		elif(next1 == "while" or next1 == "do"):
-			self.CompileWhile(x+1)
 			self.now_whilenum = self.now_whilenum + 1
+			self.CompileWhile(x+1)
 		elif(next1 == "for"):
-			self.CompileFor(x+1)
 			self.now_fornum = self.now_fornum + 1
+			self.CompileFor(x+1)
 		elif(next1 == "return"):
 			self.CompileReturn(x+1)
 		elif(next1 == "{"):
@@ -914,6 +910,7 @@ class CompilationEngine:
 			self.utility(x+1, "SyntaxERROR, it should be '('\n")
 		labelforbegin = self.now_turn_function_name + "_forbegin_" + str(self.now_fornum)
 		labelforend = self.now_turn_function_name + "_forend_" + str(self.now_fornum)
+		labelforjudge = self.now_turn_function_name + "_forjudge_" + str(self.now_fornum)
 		nextt = self.tokenizer.LL1type()
 		next1 = self.tokenizer.LL1()
 		for i in range(2):
@@ -924,6 +921,7 @@ class CompilationEngine:
 				elif(i == 1):
 					self.CompileExpression(x+1)
 					value = "TMP" + str(qplwriter.tempnum-1)
+					qplwriter.writeLabel(labelforjudge)
 					qplwriter.writeJmp(3, labelforbegin, labelforend, value)
 					self.Advance(x+1)  #';'
 				nextt = self.tokenizer.LL1type()
@@ -946,7 +944,7 @@ class CompilationEngine:
 			self.Advance(x+1)  #')'
 		else:
 			self.utility(x,"SyntaxERROR, it should be a ')'\n")
-		qplwriter.writeGoto(labelforbegin)
+		qplwriter.writeGoto(labelforjudge)
 		next1 = self.tokenizer.LL1()
 		if(next1 == "{"):
 			self.Advance(x+1)  # '{'
@@ -1219,6 +1217,8 @@ class CompilationEngine:
 			qplwriter.writeGetch(expressionnum)
 		elif(callname == "system"):
 			qplwriter.writeSystem(expressionnum)
+		elif(callname == "time"):
+			qplwriter.writeTime(expressionnum)
 		else:
 			qplwriter.writeCall(callname, expressionnum)
 		next1 = self.tokenizer.LL1()

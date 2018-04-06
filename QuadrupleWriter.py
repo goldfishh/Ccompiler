@@ -50,36 +50,45 @@ class QuadrupleWriter:
 		self.fout.write("({}, {}, {}, {})\n".format(a1, a2, a3, a4))
 	#C库函数
 	def writePrintf(self, expressionnum):
-		self.utility("printf", expressionnum)
+		self.utility("printf", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 
 	def writeScanf(self, expressionnum):
-		self.utility("scanf", expressionnum)
+		self.utility("scanf", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeSrand(self, expressionnum):
 		#import random
 		#random.seed()
-		self.utility("srand", expressionnum)
+		self.utility("srand", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeTime(self, expressionnum):
 		#import time
 		#time.time(0)
-		self.utility("time", expressionnum)
+		self.utility("time", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeRand(self, expressionnum):
 		#import random
 		#random.random()
-		self.utility("rand", expressionnum)
+		self.utility("rand", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeSleep(self, expressionnum):
 		#time.sleep()
-		self.utility("sleep", expressionnum)
+		self.utility("sleep", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeKbhit(self, expressionnum):
 		#import msvcrt
 		#msvcrt.kbhit()
-		self.utility("kbhit", expressionnum)
+		self.utility("kbhit", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeGetch(self, expressionnum):
 		#import msvcrt
 		#msvcrt.getch()
-		self.utility("getch", expressionnum)
+		self.utility("getch", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 	def writeSystem(self, expressionnum):
 		#import sys
-		self.utility("system", expressionnum)
+		self.utility("system", expressionnum, "-", "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 
 #type == 1 : jmp>=
 #type == 2 : jmp>
