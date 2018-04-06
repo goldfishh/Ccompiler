@@ -98,7 +98,8 @@ class QuadrupleWriter:
 		self.utility("goto", label)
 
 	def writeCall(self, routinename, expressionnum):
-		self.utility("call", routinename, expressionnum)
+		self.utility("call", routinename, expressionnum, "TMP"+str(self.tempnum))
+		self.tempnum = self.tempnum + 1
 
 	def writeReturn(self, flag = True):
 		if(flag):

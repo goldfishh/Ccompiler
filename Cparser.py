@@ -204,8 +204,9 @@ class CompilationEngine:
 					next1 = self.tokenizer.LL1()
 			thisdict['weidu'] = weidu
 		paramslist.append(thisdict)
-		qplwriter.writereceiveparams(thisdict['vname'])
+		# qplwriter.writereceiveparams(thisdict['vname'])
 		symboltable.insert(thisdict['vname'], thisdict, 1)
+		symboltable.insert(thisdict['vname'], thisdict, 2)
 		next1 = self.tokenizer.LL1()
 		while(next1 == ","):
 			self.Advance(x+1)  # ','
@@ -265,7 +266,8 @@ class CompilationEngine:
 				thisdict2['weidu'] = weidu
 			paramslist.append(thisdict2)
 			symboltable.insert(thisdict2['vname'], thisdict2, 1)
-			qplwriter.writereceiveparams(thisdict2['vname'])
+			symboltable.insert(thisdict['vname'], thisdict, 2)
+			# qplwriter.writereceiveparams(thisdict2['vname'])
 			next1 = self.tokenizer.LL1()
 		self.utility(x,"</parameterList>\n")
 		return paramslist
@@ -412,6 +414,7 @@ class CompilationEngine:
 			content['paramslist'] = self.CompileParameterList(x+1)
 			self.Advance(x+1)  # ")"
 		elif(next1 == ")"):
+			content['paramslist'] = list()
 			self.Advance(x+1)  # ")"
 		else:
 			self.utility(x, "SyntaxERROR, unrecognizing token in functiondecl: {}\n".format(next1))
@@ -430,6 +433,8 @@ class CompilationEngine:
 			original_content = symboltable.lookup(function_name, 1)
 			# 四元式
 			qplwriter.writeLabel(function_name)
+			for params in content['paramslist']:
+				qplwriter.writereceiveparams(params['vname'])
 			# 符号表维护
 			symboltable.variableStackPointer.append(symboltable.variableStackIterator)
 			symboltable.variableStackPointerIterator = symboltable.variableStackPointerIterator + 1
@@ -1116,7 +1121,7 @@ class CompilationEngine:
 				now = varname
 			elif(next1 == "("):         #  -> RoutineCall
 				self.CompileRoutineCall(x+1)
-				now = "TMP" + str(qplwriter.tempnum)
+				now = "TMP" + str(qplwriter.tempnum - 1)
 										#  -> varName
 			elif(next1 in self.arithop or next1 in self.cmpop or next1 in [";", ")", ",", "]"]):
 				varname = self.CompilevarName(x + 1)
