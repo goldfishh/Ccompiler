@@ -431,6 +431,10 @@ class CompilationEngine:
 
 		elif(next1 == "{"):
 			original_content = symboltable.lookup(function_name, 1)
+			# 计数器清零
+			self.now_ifnum = 0
+			self.now_whilenum = 0
+			self.now_fornum = 0
 			# 四元式
 			qplwriter.writeLabel(function_name)
 			for params in content['paramslist']:
@@ -766,6 +770,7 @@ class CompilationEngine:
 		self.CompileExpression(x+1)
 		value = "TMP" + str(qplwriter.tempnum-1)
 		labelelse = self.now_turn_function_name+"_else_"+str(self.now_ifnum)
+		labelifend = self.now_turn_function_name + "_ifend_" + str(self.now_ifnum)
 		qplwriter.writeJmp(3, "-", labelelse, value)
 		next1 = self.tokenizer.LL1()
 		if(next1 == ")"):
@@ -783,7 +788,6 @@ class CompilationEngine:
 			self.CompileStatement(x + 1)
 			next1 = self.tokenizer.LL1()
 			nextt = self.tokenizer.LL1type()
-		labelifend = self.now_turn_function_name+"_ifend_"+str(self.now_ifnum)
 		qplwriter.writeGoto(labelifend)
 		if(next1 == "}"):
 			self.Advance(x+1)  # '}'
@@ -822,6 +826,7 @@ class CompilationEngine:
 			else:
 				self.utility(x, "SyntaxERROR, it should be a '('\n")
 			labelbeginname = self.now_turn_function_name + "while_begin_" + str(self.now_whilenum)
+			labelendname = self.now_turn_function_name + "while_end_" + str(self.now_whilenum)
 			qplwriter.writeLabel(labelbeginname)
 			self.CompileExpression(x+1)
 			next1 = self.tokenizer.LL1()
@@ -830,7 +835,6 @@ class CompilationEngine:
 			else:
 				self.utility(x, "SyntaxERROR, it should be a ')'\n")
 			value = "TMP" + str(qplwriter.tempnum-1)
-			labelendname = self.now_turn_function_name + "while_end_" + str(self.now_whilenum)
 			qplwriter.writeJmp(3, "-", labelendname, value)
 
 			next1 = self.tokenizer.LL1()
@@ -872,7 +876,6 @@ class CompilationEngine:
 				self.utility(x, "SyntaxERROR, it should be a '('\n")
 			self.CompileExpression(x+1)
 			value = "TMP" + str(qplwriter.tempnum - 1)
-			# labelendname = self.now_turn_function_name + "while_end_" + str(self.now_whilenum)
 			qplwriter.writeJmp(3, labelbeginname, "-", value)
 			next1 = self.tokenizer.LL1()
 			if(next1 == ")"):
@@ -911,6 +914,7 @@ class CompilationEngine:
 		labelforbegin = self.now_turn_function_name + "_forbegin_" + str(self.now_fornum)
 		labelforend = self.now_turn_function_name + "_forend_" + str(self.now_fornum)
 		labelforjudge = self.now_turn_function_name + "_forjudge_" + str(self.now_fornum)
+		labelforstart = self.now_turn_function_name + "_forstart_" + str(self.now_fornum)
 		nextt = self.tokenizer.LL1type()
 		next1 = self.tokenizer.LL1()
 		for i in range(2):
@@ -933,7 +937,6 @@ class CompilationEngine:
 			else:
 				self.utility(x,"ERROR\n")
 		# for 第三项
-		labelforstart = self.now_turn_function_name + "_forstart_" + str(self.now_fornum)
 		qplwriter.writeLabel(labelforstart)
 		nextt = self.tokenizer.LL1type()
 		next1 = self.tokenizer.LL1()

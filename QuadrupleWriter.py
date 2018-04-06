@@ -158,3 +158,11 @@ class QuadrupleWriter:
 			self.utility("OUT")
 		else:
 			print("ERROR\n")
+
+	def writedeclaration(self, variatype, name, type):
+		if(type == 1):  #全局变量
+			self.utility("GLOBAL", variatype, type)
+		elif(type == 2):  #局部变量
+			self.utility("LOCAL", variatype, type)
+		else:
+			print("ERROR\n")
