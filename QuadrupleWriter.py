@@ -43,9 +43,10 @@
 class QuadrupleWriter:
 	def __init__(self, fname):
 		self.foutname = fname.split('.')[0] + ".qpl"
-		self.fout = open(self.foutname, "a+", encoding = "utf-8")
+		self.fout = open(self.foutname, "w", encoding = "utf-8")
 		self.tempnum = 0
-
+	def __del__(self):
+		self.fout.close()
 	def utility(self,a1, a2="-", a3="-", a4="-"):
 		self.fout.write("({}, {}, {}, {})\n".format(a1, a2, a3, a4))
 	#C库函数
@@ -156,13 +157,5 @@ class QuadrupleWriter:
 			self.utility("IN")
 		elif(type == 2):
 			self.utility("OUT")
-		else:
-			print("ERROR\n")
-
-	def writedeclaration(self, variatype, name, type):
-		if(type == 1):  #全局变量
-			self.utility("GLOBAL", variatype, type)
-		elif(type == 2):  #局部变量
-			self.utility("LOCAL", variatype, type)
 		else:
 			print("ERROR\n")

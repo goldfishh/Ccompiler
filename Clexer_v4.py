@@ -9,7 +9,7 @@ class C_Lexer:
 		self.contents_pre = ""
 		self.contents_fur = ""
 		# Read file
-		self.fr = open(file,"r")
+		self.fr = open(file,"r", encoding = "utf-8")
 		self.contents = self.fr.read()
 		self.fname = file
 		# Output file
@@ -21,7 +21,7 @@ class C_Lexer:
 		# Remove annotation
 		self.contents = re.sub(r'\/\/[^\n]*',"",self.contents)
 		self.contents = re.sub(r'\/\*[\d\D]*?\*\/',"",self.contents)
-		# Remove macro definition(nonsupport )
+		# Remove macro definition(nonsupport)
 		self.contents = re.sub(r'\#include[^\n]*',"",self.contents)
 		self.contents = re.sub(r'\#endif[^\n]*',"",self.contents)
 		self.contents = re.sub(r'\#ifndef[^\n]*',"",self.contents)
@@ -46,10 +46,6 @@ class C_Lexer:
 							"=",
 							">","<",
 							"\"","\'","#"] 
-		
-		#Alpha indicator
-		self.fp=0
-
 		#Keywords table
 		self.keywords_table = ["auto","register","union","volatile",
 								"double","int","long","char","struct","float","short","unsigned","signed","void","enum",
@@ -58,7 +54,9 @@ class C_Lexer:
 								"goto","do","return",
 								"sizeof",
 								"typedef",
-								"main"]
+								]
+		#Alpha indicator
+		self.fp=0
 
 		#Variable quantity for grammar analyzer
 		self.word_iterator = 0
@@ -88,10 +86,7 @@ class C_Lexer:
 	def IsKeywords(self,word):
 		for Keyword in self.keywords_table:
 			if(word==Keyword):
-				if(Keyword=="main"):
-					return 2
-				else:
-					return 1
+				return 1
 		return 0
 
 	#SingleSymbol
@@ -110,11 +105,11 @@ class C_Lexer:
 		key = self.change_table[first][2]
 		key_val = self.change_table[first]
 
-		while(first<last):
-			while(first<last and self.change_table[last][2]>=key):
+		while(first < last):
+			while(first < last and self.change_table[last][2] >= key):
 				last -= 1
 			self.change_table[first] = self.change_table[last]
-			while(first<last and self.change_table[last][2]<=key):
+			while(first < last and self.change_table[last][2] <= key):
 				first += 1
 			self.change_table[last] = self.change_table[first]
 		self.change_table[first] = key_val
@@ -122,6 +117,8 @@ class C_Lexer:
 		self.quickSort(first+1,high)
 
 	#PreScanner
+	# 主要建 self.change_table
+	# 并做简单的冲突处理
 	def preScanner(self):
 		flag = 1
 		searchplace = self.contents
@@ -210,21 +207,17 @@ class C_Lexer:
 		change_table_length = len(self.change_table)
 		self.quickSort(0,change_table_length-1)
 
-		for i in range(0,change_table_length-2):
+		for i in range(0,change_table_length-1):
 			for j in range(change_table_length-1,i,-1):
 				if(self.change_table[i][0]==self.change_table[j][0]):
 					self.change_table[i][3] = self.change_table[j][2]
 				if(self.change_table[i][0]==self.change_table[j][1]):
 					self.change_table[j][1] = self.change_table[i][1]
-		# for word in self.change_table:
-		# 	print(word)
 
 	#Changer
 	def changer(self):
 		#Preparation
 		ch = self.contents[self.fp]
-		st_pos = self.fp
-		ed_pos = self.fp	
 		length_change_table = len(self.change_table)
 
 		#Identifier or Reserved words
@@ -472,250 +465,6 @@ class C_Lexer:
 				else:
 					print("Cannot analyze code "+ch+" .")
 
-	#Scanner
-	def scanner(self,ch):
-		#Preparation
-		ch = self.contents[self.fp]
-
-		#Identifier or Reserved words
-		if(self.IsAlpha(ch)==1):
-			word = ""
-			word = word + ch
-			self.fp += 1
-			ch = self.contents[self.fp]
-
-			while(self.IsNum(ch)==1 or self.IsAlpha(ch)==1 or ch=="_"):
-				word = word + ch
-				self.fp += 1
-				ch = self.contents[self.fp]
-
-			if(self.IsKeywords(word)==2):
-				self.output = self.output + [["IDENTIFIER",word]]
-			else:
-				if(self.IsKeywords(word)==1):
-					self.output = self.output + [["RESERVED_WORD",word]]
-				else:
-					self.output = self.output + [["IDENTIFIER",word]]
-		
-		else:	
-			#Constant
-			if(self.IsNum(ch)==1):
-				number = ""
-				number = number + ch
-				decimal_count = 0
-				self.fp += 1
-				ch = self.contents[self.fp]
-
-				while(self.IsNum(ch)==1 or self.IsDecimal(ch)==1):
-					number = number + ch
-					if(self.IsDecimal(ch)==1):
-						decimal_count += 1
-					self.fp += 1
-					ch = self.contents[self.fp]
-				
-				if(self.IsDecimal(self.contents[self.fp-1])==1):
-					decimal_count += 1
-
-				if(decimal_count==0):
-					self.output = self.output + [["INT_CONST",number]]
-				else:
-					if(decimal_count==1):
-						self.output = self.output + [["FLOAT_CONST",number]]
-					else:
-						self.output = self.output + [["ERROR_CONST",number]]
-
-			else:
-				#Symbol and Char/String-constant
-				if(self.IsSingleSymbol(ch)==1):
-					if(ch=='\''):
-						error_flag = 0
-						char_constant = ""
-						char_constant = char_constant + '\''
-						self.fp += 1
-						ch = self.contents[self.fp]
-						while(ch!='\''):
-							if(ch=='\\'):
-								if(self.contents[self.fp+1]=='\n'):
-									self.fp += 2
-									ch = self.contents[self.fp]
-									continue
-								else:
-									char_constant = char_constant + ch
-									self.fp +=1
-									ch = self.contents[self.fp]
-									continue
-							if(ch=='\n'):
-								if(self.contents[self.fp-1]=='\\'):
-									self.fp +=1
-									ch = self.contents[self.fp]
-									continue
-								else:
-									error_flag = 1
-							char_constant = char_constant + ch
-							self.fp += 1
-							ch = self.contents[self.fp]
-						char_constant = char_constant + '\''
-						self.fp += 1
-						if(error_flag==0):
-							self.output = self.output + [["CHAR_CONST",char_constant]]
-						else:
-							self.output = self.output + [["ERROR_CONST",char_constant]]
-					else:
-						if(ch=='\"'):
-							error_flag = 0
-							string_constant = ""
-							string_constant = string_constant + '\"'
-							self.fp += 1
-							ch = self.contents[self.fp]
-							while(ch!='\"'):
-								if(ch=='\\'):
-									if(self.contents[self.fp+1]=='\n'):
-										self.fp += 2
-										ch = self.contents[self.fp]
-										continue
-									else:
-										string_constant = string_constant + ch
-										self.fp +=1
-										ch = self.contents[self.fp]
-										continue
-								if(ch=='\n'):
-									if(self.contents[self.fp-1]=='\\'):
-										self.fp +=1
-										ch = self.contents[self.fp]
-										continue
-									else:
-										error_flag = 1
-								string_constant = string_constant + ch
-								self.fp += 1
-								ch = self.contents[self.fp]
-							string_constant = string_constant + '\"'
-							self.fp += 1
-							if(error_flag==0):
-								self.output = self.output + [["STRING_CONST",string_constant]]
-							else:
-								self.output = self.output + [["ERROR_CONST",string_constant]]
-						else:
-							mark = ""
-							mark = mark + ch
-							
-							if(ch=='[' or ch==']' or ch=='(' or ch==')' or ch=='{' or ch=='}' or ch==')' or ch=='.' or ch==',' or ch==';' or ch=='~' or ch=='?' or ch==':' or ch=='\\' or ch=='#'):
-								self.output = self.output + [["SYMBOL",mark]]
-								self.fp += 1
-							
-							elif(ch=='-'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='>' or ch=='=' or ch=='-'):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-							
-							elif(ch=='+'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='+' or ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							elif(ch=='*' or ch=='/' or ch=='%' or ch=='^' or ch=='!' or ch=='='):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							elif(ch=='&'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='&' or ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							elif(ch=='|'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='|' or ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							elif(ch=='<'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='<'):
-									mark = mark + ch
-									self.fp += 1
-									ch = self.contents[self.fp]
-									if(ch=='='):
-										mark = mark + ch
-										self.output = self.output + [["SYMBOL",mark]]
-										self.fp +=1
-									else:
-										self.output = self.output + [["SYMBOL",mark]]
-								elif(ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							elif(ch=='>'):
-								self.fp += 1
-								ch = self.contents[self.fp]
-								if(ch=='>'):
-									mark = mark + ch
-									self.fp += 1
-									ch = self.contents[self.fp]
-									if(ch=='='):
-										mark = mark + ch
-										self.output = self.output + [["SYMBOL",mark]]
-										self.fp +=1
-									else:
-										self.output = self.output + [["SYMBOL",mark]]
-								elif(ch=='='):
-									mark = mark + ch
-									self.output = self.output + [["SYMBOL",mark]]
-									self.fp +=1
-								else:
-									self.output = self.output + [["SYMBOL",mark]]
-
-							else:
-								print("Code error!\nPlease check the symbol part.")
-
-				else:
-					print("Cannot analyze code "+ch+" .")
-
-	def analyzer(self):
-		self.fp = 0
-		self.length = len(self.contents)
-		while(self.fp<self.length):
-			ch = self.contents[self.fp]
-			if(ch==' ' or ch == '\t' or ch == '\n'):
-				self.fp +=1
-			else:
-				self.scanner(ch)
-		
-		self.output_length = len(self.output)
-		#print(self.output)
-		for word in self.output:
-			print(word)
-		fw = open(self.file_output,"w")
-		for word in self.output:
-			fw.write(str(word)+"\n")
-
 	def preAnalyzer(self):
 		self.fp = 0
 		self.length = len(self.contents)
@@ -729,7 +478,238 @@ class C_Lexer:
 		self.contents = re.sub(r'#define (.*) (.*)',"",self.contents)
 		self.contents = re.sub(r'typedef (.*) (.*);',"",self.contents)
 		self.contents = re.sub(r'enum(.*){(.*)};',"",self.contents)
-		print(self.contents)
+		# print(self.contents)
+
+	#Scanner
+	def scanner(self):
+		#Preparation
+		ch = self.contents[self.fp]
+		#Identifier or Reserved words
+		if(self.IsAlpha(ch)==1):
+			word = ""
+			word = word + ch
+			self.fp += 1
+			ch = self.contents[self.fp]
+
+			while(self.IsNum(ch)==1 or self.IsAlpha(ch)==1 or ch=="_"):
+				word = word + ch
+				self.fp += 1
+				ch = self.contents[self.fp]
+
+			if(self.IsKeywords(word)==1):
+				self.output = self.output + [["RESERVED_WORD",word]]
+			else:
+				self.output = self.output + [["IDENTIFIER",word]]
+		# INT / FLOAT
+		elif(self.IsNum(ch)==1):
+			number = ""
+			number = number + ch
+			decimal_count = 0
+			self.fp += 1
+			ch = self.contents[self.fp]
+
+			while(self.IsNum(ch)==1 or self.IsDecimal(ch)==1):
+				number = number + ch
+				if(self.IsDecimal(ch)==1):
+					decimal_count += 1
+				self.fp += 1
+				ch = self.contents[self.fp]
+
+			if(self.IsDecimal(self.contents[self.fp-1])==1):
+				decimal_count += 1
+
+			if(decimal_count==0):
+				self.output = self.output + [["INT_CONST",number]]
+			else:
+				if(decimal_count==1):
+					self.output = self.output + [["FLOAT_CONST",number]]
+				else:
+					self.output = self.output + [["ERROR_CONST",number]]
+		# Symbol and Char/String-constant
+		elif(self.IsSingleSymbol(ch)==1):
+			if(ch=='\''):
+				error_flag = 0
+				char_constant = ""
+				char_constant = char_constant + '\''
+				self.fp += 1
+				ch = self.contents[self.fp]
+				while(ch!='\''):
+					if(ch=='\\'):
+						if(self.contents[self.fp+1]=='\n'):
+							self.fp += 2
+							ch = self.contents[self.fp]
+							continue
+						else:
+							char_constant = char_constant + ch
+							self.fp +=1
+							ch = self.contents[self.fp]
+							continue
+					if(ch=='\n'):
+						if(self.contents[self.fp-1]=='\\'):
+							self.fp +=1
+							ch = self.contents[self.fp]
+							continue
+						else:
+							error_flag = 1
+					char_constant = char_constant + ch
+					self.fp += 1
+					ch = self.contents[self.fp]
+				char_constant = char_constant + '\''
+				self.fp += 1
+				if(error_flag==0):
+					self.output = self.output + [["CHAR_CONST",char_constant]]
+				else:
+					self.output = self.output + [["ERROR_CONST",char_constant]]
+			elif(ch=='\"'):
+				error_flag = 0
+				string_constant = ""
+				string_constant = string_constant + '\"'
+				self.fp += 1
+				ch = self.contents[self.fp]
+				while(ch!='\"'):
+					if(ch=='\\'):
+						if(self.contents[self.fp+1]=='\n'):
+							self.fp += 2
+							ch = self.contents[self.fp]
+							continue
+						else:
+							string_constant = string_constant + ch
+							self.fp +=1
+							ch = self.contents[self.fp]
+							continue
+					if(ch=='\n'):
+						if(self.contents[self.fp-1]=='\\'):
+							self.fp +=1
+							ch = self.contents[self.fp]
+							continue
+						else:
+							error_flag = 1
+					string_constant = string_constant + ch
+					self.fp += 1
+					ch = self.contents[self.fp]
+				string_constant = string_constant + '\"'
+				self.fp += 1
+				if(error_flag==0):
+					self.output = self.output + [["STRING_CONST",string_constant]]
+				else:
+					self.output = self.output + [["ERROR_CONST",string_constant]]
+			else:
+				mark = ""
+				mark = mark + ch
+
+				if(ch=='[' or ch==']' or ch=='(' or ch==')' or ch=='{' or ch=='}' or ch==')' or ch=='.' or ch==',' or ch==';' or ch=='~' or ch=='?' or ch==':' or ch=='\\' or ch=='#'):
+					self.output = self.output + [["SYMBOL",mark]]
+					self.fp += 1
+
+				elif(ch=='-'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='>' or ch=='=' or ch=='-'):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='+'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='+' or ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='*' or ch=='/' or ch=='%' or ch=='^' or ch=='!' or ch=='='):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='&'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='&' or ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='|'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='|' or ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='<'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='<'):
+						mark = mark + ch
+						self.fp += 1
+						ch = self.contents[self.fp]
+						if(ch=='='):
+							mark = mark + ch
+							self.output = self.output + [["SYMBOL",mark]]
+							self.fp +=1
+						else:
+							self.output = self.output + [["SYMBOL",mark]]
+					elif(ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+
+				elif(ch=='>'):
+					self.fp += 1
+					ch = self.contents[self.fp]
+					if(ch=='>'):
+						mark = mark + ch
+						self.fp += 1
+						ch = self.contents[self.fp]
+						if(ch=='='):
+							mark = mark + ch
+							self.output = self.output + [["SYMBOL",mark]]
+							self.fp +=1
+						else:
+							self.output = self.output + [["SYMBOL",mark]]
+					elif(ch=='='):
+						mark = mark + ch
+						self.output = self.output + [["SYMBOL",mark]]
+						self.fp +=1
+					else:
+						self.output = self.output + [["SYMBOL",mark]]
+				else:
+					print("Cannot analyze char " + ch + " .")
+
+	def analyzer(self):
+		self.fp = 0
+		self.length = len(self.contents)
+		while(self.fp<self.length):
+			ch = self.contents[self.fp]
+			if(ch == ' ' or ch == '\t' or ch == '\n'):
+				self.fp +=1
+			else:
+				self.scanner()
+		
+		self.output_length = len(self.output)
+		#print(self.output)
+		# for word in self.output:
+		# 	print(word)
+		fw = open(self.file_output,"w", encoding = "utf-8")
+		for word in self.output:
+			fw.write(str(word)+"\n")
 
 	def word_table(self,num):
 		if(num<self.output_length):
@@ -761,21 +741,12 @@ class C_Lexer:
 if (__name__ == '__main__'):
 	os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser\test")
 	file = "mergesort.c"
-
+	# create a object
 	obj = C_Lexer(file)
+	# pre-operation
 	obj.preScanner()
 	obj.preAnalyzer()
+	# wording
 	obj.analyzer()
-
-	# obj.word_iterator = 9
-	# print(obj.next())
-	# print(obj.LL(6))
-
-	# print(obj.output[10])
-	# print(obj.output[15])
-
-	# obj.advance()
-	# print(obj.next())
-	# print(obj.LL(6))
 
 	time.sleep(1000)
