@@ -1,25 +1,41 @@
-# 增添符号表功能 enum√
-# 语法分析错误跳出, 语义分析错误跳出
-# 增加符号表栈式结构
-# 增加符号表功能使用相应语句
 import os
+import sys
+
+from Clexer_v4 import C_Lexer
+from SymbolTable import SymbolTable
+from QuadrupleWriter import QuadrupleWriter
+from QR2PY import QuadrupleInterpreter
 
 class CompilationEngine:
-
 	def __init__(self, obj):
+		# 全局符号表
+		self.symboltable = SymbolTable()
+		# 四元式打印机
+		self.qplwriter = QuadrupleWriter(obj.fname)
+		# XML文档输出文件名
 		self.foutname = obj.fname.split('.')[0] + ".xml"
-		self.fout = open(self.foutname,"a+",encoding="utf-8")
+		# 创建并打开待输出文件
+		self.fout = open(self.foutname, "w", encoding="utf-8")
+		# 接收C_LEXER对象
 		self.tokenizer = obj
+		# 比较函数
 		self.AStype = ["int", "double", "char", "string", "void"]
 		self.ADtype = ["struct", "enum"]
-		self.arithop = ["+", "-", "*", "/", "%", "&&", "||", "&", "|", "^", "<<", ">>"]
+		self.arithop = ["+", "-", "*", "/", "%", "&&", "||",
+						"&", "|", "^", "<<", ">>"]
 		self.cmpop = [">", "<", ">=", "<=", "==", "!="]
+		# 四元式标签功能函数
 		self.now_turn_function_name = ""
 		self.now_ifnum = 0
 		self.now_whilenum = 0
 		self.now_fornum = 0
+		# 解释器功能函数
+		self.func_varia = []
+		self.cur_func = "globe"
+
 	def __del__(self):
 		self.fout.close()
+		self.qplwriter.__del__()
 
 	# 打印友好的小功能函数
 	def utility(self, x, now):
@@ -29,6 +45,28 @@ class CompilationEngine:
 
 	def utility2(self):
 		return self.tokenizer.word_table(self.tokenizer.word_iterator)
+
+	# interpreter function
+	def insertFuncVaria(self):
+		for word in self.symboltable.variableStack:
+			flag = 0
+			word_type = word['variable_type']
+			word_name = word['vname']
+			word_isarray = word['isarray']
+			for term in self.func_varia:
+				if(term[1]==word_name):
+					if(term[0]=="globe"):
+						flag = 1
+			if(flag==1):
+				continue
+			if(word_isarray==False):
+				self.func_varia.append([self.cur_func,word_name,word_type[0],0,0,0])
+			else:
+				length = len(word['weidu'])
+				if(length==1):
+					self.func_varia.append([self.cur_func,word_name,word_type[0],1,word['weidu'][0][1],0])
+				else:
+					self.func_varia.append([self.cur_func,word_name,word_type[0],2,word['weidu'][0][1],word['weidu'][1][1]])
 
 	def Advance(self, x):
 		now_type , now_word = self.tokenizer.word_table(self.tokenizer.word_iterator)[0],self.tokenizer.word_table(self.tokenizer.word_iterator)[1]
@@ -67,13 +105,12 @@ class CompilationEngine:
 
 	def CompileGlobalDeclaration(self, x):
 		self.utility(x, "<globalDeclaration>\n")
+		self.cur_func = "globe"
 		next1 = self.tokenizer.LL1()
-		if(next1 == 'enum'):
+		if(next1 == 'enum'):               # → enum_decl
 			self.CompileEnumDecl(x+1)
 		elif(next1 == 'struct'):
-			self.CompileStructDecl(x+1)
-		# elif(next1 == 'typedef'):
-		# 	self.CompileTypedef(x+1)
+			self.CompileStructDecl(x+1)    # → struct_decl
 		elif(next1 in self.AStype):
 			nextpt = 1
 			nextx = self.tokenizer.LL(nextpt)
@@ -102,6 +139,7 @@ class CompilationEngine:
 				self.utility(x, "SyntaxERROR, for jumping out uncommonly\n")
 		else:   # E3
 			self.utility(x, "SyntaxERROR, unrecognizing token\n")
+		self.insertFuncVaria()
 		self.utility(x, "</globalDeclaration>\n")
 
 # 3.28  添加符号表
@@ -126,7 +164,7 @@ class CompilationEngine:
 			if(nextt == "IDENTIFIER"):
 				thitype_2 = self.utility2()[1]
 				self.Advance(x)
-			else:
+			else:  #E4
 				self.utility(x, "SyntaxERROR, it should be an identifier\n")
 		elif(next1 == "enum"):
 			self.Advance(x)
@@ -135,9 +173,9 @@ class CompilationEngine:
 			if(nextt == "IDENTIFIER"):
 				thitype_2 = self.utility2()[1]
 				self.Advance(x)
-			else:
+			else:  #E5
 				self.utility(x, "SyntaxERROR, it should be an identifier\n")
-		else:  #E4
+		else:  #E6
 			self.utility(x, "SyntaxERROR, for unrecognized token\n")
 		if(thitype_2):
 			thitype = (thitype_1, thitype_2)
@@ -163,17 +201,17 @@ class CompilationEngine:
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			thisdict['vname'] = self.utility2()[1]
-			if (symboltable.lookup_variable(findvname=thisdict['vname'], ftype=1)):
-				self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thisdict['vname']))
+			if (self.symboltable.lookup_variable(findvname=thisdict['vname'], ftype=1)):
+				self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thisdict['vname']))  #E7
 			self.Advance(x+1)  # varName
 		else:
-			self.utility(x, "SyntaxERROR, it should be an identifier\n")
+			self.utility(x, "SyntaxERROR, it should be an identifier\n")  #E8
 		next1 = self.tokenizer.LL1()
 		thisdict['isarray'] = False
 		if(next1 == "["):
 			thisdict['isarray'] = True
 			weidu = []
-			if(thisdict['starnum'] != 0):
+			if(thisdict['starnum'] != 0):  #E9
 				self.utility(x, "SyntaxERROR, '*' and '['']' cannot use together\n")
 			else:
 				num = 1
@@ -190,11 +228,11 @@ class CompilationEngine:
 						next1 = self.tokenizer.LL1()
 						if(next1 == "]"):
 							self.Advance(x + 1)  # ']'
-						else:
+						else:  #E10
 							self.utility(x, "SyntaxERROR, it should be a ']'\n")
 					elif(next1 == "]"):
 						self.Advance(x+1)  #']'
-					else:
+					else:  #E11
 						self.utility(x, "SyntaxERROR, unrecgonized token in parameterlist\n")
 					if(thiweidu_2):
 						thiweidu = (thiweidu_1, thiweidu_2)
@@ -204,9 +242,9 @@ class CompilationEngine:
 					next1 = self.tokenizer.LL1()
 			thisdict['weidu'] = weidu
 		paramslist.append(thisdict)
-		# qplwriter.writereceiveparams(thisdict['vname'])
-		symboltable.insert(thisdict['vname'], thisdict, 1)
-		symboltable.insert(thisdict['vname'], thisdict, 2)
+		# self.qplwriter.writereceiveparams(thisdict['vname'])
+		self.symboltable.insert(thisdict['vname'], thisdict, 1)
+		self.symboltable.insert(thisdict['vname'], thisdict, 2)
 		next1 = self.tokenizer.LL1()
 		while(next1 == ","):
 			self.Advance(x+1)  # ','
@@ -224,8 +262,8 @@ class CompilationEngine:
 			nextt = self.tokenizer.LL1type()
 			if (nextt == "IDENTIFIER"):
 				thisdict2['vname'] = self.utility2()[1]
-				if (symboltable.lookup_variable(findvname=thisdict2['vname'], ftype=1)):
-					self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thisdict2['vname']))
+				if (self.symboltable.lookup_variable(findvname=thisdict2['vname'], ftype=1)):
+					self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thisdict2['vname']))
 				self.Advance(x + 1)  # varName
 			else:
 				self.utility(x, "SyntaxERROR, it should be an identifier\n")
@@ -265,9 +303,9 @@ class CompilationEngine:
 						next1 = self.tokenizer.LL1()
 				thisdict2['weidu'] = weidu
 			paramslist.append(thisdict2)
-			symboltable.insert(thisdict2['vname'], thisdict2, 1)
-			symboltable.insert(thisdict['vname'], thisdict, 2)
-			# qplwriter.writereceiveparams(thisdict2['vname'])
+			self.symboltable.insert(thisdict2['vname'], thisdict2, 1)
+			self.symboltable.insert(thisdict['vname'], thisdict, 2)
+			# self.qplwriter.writereceiveparams(thisdict2['vname'])
 			next1 = self.tokenizer.LL1()
 		self.utility(x,"</parameterList>\n")
 		return paramslist
@@ -281,8 +319,8 @@ class CompilationEngine:
 		vname = self.utility2()[1]
 		if(nextt != "IDENTIFIER"):
 			self.utility(x+1, "SyntaxERROR: It should be an identifier\n")
-		elif(symboltable.lookup(vname, 5)):
-			# look up symboltable
+		elif(self.symboltable.lookup(vname, 5)):
+			# look up self.symboltable
 			self.utility(x+1, "SemanticsERROR: Redefine variable: {}\n".format(vname))
 		else:
 			self.Advance(x + 1)  # varName
@@ -332,8 +370,8 @@ class CompilationEngine:
 					pt = pt + 1
 				vdict[va] = vv
 				next1 = self.tokenizer.LL1()
-			# insert to symboltable
-			symboltable.insert(vname, vdict)
+			# insert to self.symboltable
+			self.symboltable.insert(vname, vdict)
 			next1 = self.tokenizer.LL1()
 			if(next1 != "}"):
 				self.utility(x + 1, "SyntaxERROR: It should be an '}'\n")
@@ -357,7 +395,7 @@ class CompilationEngine:
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			structname = self.utility2()[1]
-			if(symboltable.lookup(structname, 4)):
+			if(self.symboltable.lookup(structname, 4)):
 				self.utility(x + 1, "SemanticsERROR: Redefine struct variable: {}\n".format(structname))
 			self.Advance(x+1)  #varName
 		else:
@@ -378,11 +416,12 @@ class CompilationEngine:
 			self.Advance(x+1)  #"}"
 		else:
 			self.utility(x+1, "SyntaxERROR: It should be a '}'\n")
+		next1 = self.tokenizer.LL1()
 		if(next1 == ";"):
 			self.Advance(x+1)  #";"
 		else:
 			self.utility(x+1, "SyntaxERROR: It should be a ';'\n")
-		symboltable.insert(structname, content, 4)
+		self.symboltable.insert(structname, content, 4)
 		self.utility(x,"</structDecl>\n")
 
 # 3.28  添加符号表
@@ -393,13 +432,14 @@ class CompilationEngine:
 		next1 = self.tokenizer.LL1()
 		starnum = 0
 		while(next1 == "*"):
-			starnum = starnum + 1
+			starnum = starnum + 1  # 加入函数表
 			self.Advance(x+1)  #"*"
 			next1 = self.tokenizer.LL1()
 		content['return_type_starnum'] = starnum
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			function_name = self.utility2()[1]
+			self.cur_func = function_name
 			self.now_turn_function_name = function_name
 			self.Advance(x+1)  #routineName
 		else:
@@ -410,6 +450,11 @@ class CompilationEngine:
 		else:
 			self.utility(x, "SyntaxERROR, it should be '('\n")
 		next1 = self.tokenizer.LL1()
+		
+		# 符号表维护
+		self.symboltable.variableStackPointer.append(self.symboltable.variableStackIterator)
+		self.symboltable.variableStackPointerIterator = self.symboltable.variableStackPointerIterator + 1
+		
 		if(next1 in self.ADtype or next1 in self.AStype):
 			content['paramslist'] = self.CompileParameterList(x+1)
 			self.Advance(x+1)  # ")"
@@ -423,34 +468,31 @@ class CompilationEngine:
 		# 仅函数声明
 		if(next1 == ";"):
 			self.Advance(x+1)  # ";"
-			if(symboltable.lookup(function_name, 1)):
+			if(self.symboltable.lookup(function_name, 1)):
 				self.utility(x+1, "SemanticsERROR: Redefine function: {}\n".format(function_name))
 			else:
-				symboltable.insert(function_name, content, 1)
+				self.symboltable.insert(function_name, content, 1)
 			# exit 1
 
 		elif(next1 == "{"):
-			original_content = symboltable.lookup(function_name, 1)
+			original_content = self.symboltable.lookup(function_name, 1)
 			# 计数器清零
 			self.now_ifnum = 0
 			self.now_whilenum = 0
 			self.now_fornum = 0
 			# 四元式
-			qplwriter.writeLabel(function_name)
+			self.qplwriter.writeLabel(function_name)
 			for params in content['paramslist']:
-				qplwriter.writereceiveparams(params['vname'])
-			# 符号表维护
-			symboltable.variableStackPointer.append(symboltable.variableStackIterator)
-			symboltable.variableStackPointerIterator = symboltable.variableStackPointerIterator + 1
+				self.qplwriter.writereceiveparams(params['vname'])
 			if(not original_content):
 				content['isused'] = True
-				symboltable.insert(function_name, content, 1)
+				self.symboltable.insert(function_name, content, 1)
 				self.CompileBodyDecl(x + 1)
 			elif(not original_content['isused']):
 				# DEBUG
 				# 与之前的content比较, 语义分析
 				if(content == original_content):
-					symboltable.update(1, function_name, 3, True)
+					self.symboltable.update(1, function_name, 3, True)
 					self.CompileBodyDecl(x+1)
 				else:
 					self.utility(x+1, "SemanticsERROR: The definition of function: {} is not matched correctly\n".format(function_name))
@@ -480,7 +522,7 @@ class CompilationEngine:
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			thivaria['vname'] = self.utility2()[1]
-			if(symboltable.lookup_variable(findvname = thivaria['vname'], ftype = 1)):
+			if(self.symboltable.lookup_variable(findvname = thivaria['vname'], ftype = 1)):
 				self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thivaria['vname']))
 			#else: insert
 
@@ -525,8 +567,8 @@ class CompilationEngine:
 					next1 = self.tokenizer.LL1()
 			thivaria['weidu'] = weidu
 		if (utype == 1 or utype == 2):
-			symboltable.variableStack.append(thivaria)
-			symboltable.variableStackIterator = symboltable.variableStackIterator + 1
+			self.symboltable.variableStack.append(thivaria)
+			self.symboltable.variableStackIterator = self.symboltable.variableStackIterator + 1
 		elif(utype == 3):
 			structlist.append(thivaria)
 		next1 = self.tokenizer.LL1()
@@ -545,8 +587,8 @@ class CompilationEngine:
 			nextt = self.tokenizer.LL1type()
 			if (nextt == "IDENTIFIER"):
 				thivariab['vname'] = self.utility2()[1]
-				if (symboltable.lookup_variable(findvname=thivariab['vname'], ftype=1)):
-					self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thivariab['vname']))
+				if (self.symboltable.lookup_variable(findvname=thivariab['vname'], ftype=1)):
+					self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thivariab['vname']))
 				# else: insert
 
 				self.Advance(x + 1)  # varName
@@ -590,8 +632,8 @@ class CompilationEngine:
 						next1 = self.tokenizer.LL1()
 				thivariab['weidu'] = weidu
 			if (utype == 1 or utype == 2):
-				symboltable.variableStack.append(thivariab)
-				symboltable.variableStackIterator = symboltable.variableStackIterator + 1
+				self.symboltable.variableStack.append(thivariab)
+				self.symboltable.variableStackIterator = self.symboltable.variableStackIterator + 1
 			elif (utype == 3):
 				structlist.append(thivariab)
 			next1 = self.tokenizer.LL1()
@@ -627,16 +669,16 @@ class CompilationEngine:
 			self.utility(x, "SyntaxERROR, it should be a '}'\n")
 
 		# 符号表维护
-		ii = symboltable.variableStackPointer[symboltable.variableStackPointerIterator-1]
-		eend = len(symboltable.variableStack)
+		ii = self.symboltable.variableStackPointer[self.symboltable.variableStackPointerIterator-1]
+		eend = len(self.symboltable.variableStack)
 		# print("{}: {}".format(ii, eend))
 		while(ii != eend):
-			symboltable.variableStack.pop()
-			symboltable.variableStackIterator = symboltable.variableStackIterator - 1
+			self.symboltable.variableStack.pop()
+			self.symboltable.variableStackIterator = self.symboltable.variableStackIterator - 1
 			eend = eend - 1
 			# print("{}: {}".format(ii, eend))
-		symboltable.variableStackPointer.pop()
-		symboltable.variableStackPointerIterator = symboltable.variableStackPointerIterator - 1
+		self.symboltable.variableStackPointer.pop()
+		self.symboltable.variableStackPointerIterator = self.symboltable.variableStackPointerIterator - 1
 		self.utility(x, "</bodyDecl>\n")
 
 	def CompileStatement(self, x):
@@ -703,7 +745,7 @@ class CompilationEngine:
 	def CompileLabel(self, x):
 		self.utility(x, "<labelStatement>\n")
 		labelname = self.utility2()[1]
-		qplwriter.writeLabel(labelname)
+		self.qplwriter.writeLabel(labelname)
 		self.Advance(x+1)  # labelname
 		next1 = self.tokenizer.LL1()
 		if(next1 == ":"):
@@ -720,7 +762,7 @@ class CompilationEngine:
 		if(next1 in ["++",  "--"]):
 			self.Advance(x+1)  # "++", "--"
 			varname = self.CompilevarName(x+1)  # varName
-			qplwriter.writeselfop(next1, varname, 1)
+			self.qplwriter.writeselfop(next1, varname, 1)
 		else:
 			varname = ""
 			while(next1 == "*"):
@@ -731,13 +773,13 @@ class CompilationEngine:
 			next1 = self.tokenizer.LL1()
 			if(next1 in ["++", "--"]):
 				self.Advance(x+1)
-				qplwriter.writeselfop(next1, varname, 2)
+				self.qplwriter.writeselfop(next1, varname, 2)
 			else:
 				while (next1 == "["):
 					self.Advance(x + 1)  # '['
 					varname = varname + "["
 					self.CompileExpression(x + 1)
-					varname = varname + "TMP" + str(qplwriter.tempnum-1)
+					varname = varname + "TMP" + str(self.qplwriter.tempnum-1)
 					next1 = self.tokenizer.LL1()
 					self.Advance(x + 1)  # ']'
 					varname = varname + "]"
@@ -748,7 +790,7 @@ class CompilationEngine:
 				if(next1 != '='):
 					self.utility(x+1, "SyntaxERROR, it should be '='\n")
 				self.CompileExpression(x+1)
-				qplwriter.writelet(varname)
+				self.qplwriter.writelet(varname)
 		next1 = self.tokenizer.LL1()
 		if(next1 == ";" or next1 == ")"):
 			self.Advance(x+1)  # ';' or ')'
@@ -768,10 +810,10 @@ class CompilationEngine:
 		else:
 			self.utility(x, "SyntaxERROR, it should be a '('\n")
 		self.CompileExpression(x+1)
-		value = "TMP" + str(qplwriter.tempnum-1)
+		value = "TMP" + str(self.qplwriter.tempnum-1)
 		labelelse = self.now_turn_function_name+"_else_"+str(self.now_ifnum)
 		labelifend = self.now_turn_function_name + "_ifend_" + str(self.now_ifnum)
-		qplwriter.writeJmp(3, "-", labelelse, value)
+		self.qplwriter.writeJmp(3, "-", labelelse, value)
 		next1 = self.tokenizer.LL1()
 		if(next1 == ")"):
 			self.Advance(x+1)  # ')'
@@ -788,13 +830,13 @@ class CompilationEngine:
 			self.CompileStatement(x + 1)
 			next1 = self.tokenizer.LL1()
 			nextt = self.tokenizer.LL1type()
-		qplwriter.writeGoto(labelifend)
+		self.qplwriter.writeGoto(labelifend)
 		if(next1 == "}"):
 			self.Advance(x+1)  # '}'
 		else:
 			self.utility(x, "SyntaxERROR, it should be a '}'\n")
 		next1 = self.tokenizer.LL1()
-		qplwriter.writeLabel(labelelse)
+		self.qplwriter.writeLabel(labelelse)
 		if(next1 == "else"):
 			self.Advance(x+1)  # "else"
 			next1 = self.tokenizer.LL1()
@@ -812,7 +854,7 @@ class CompilationEngine:
 				self.Advance(x + 1)  # '}'
 			else:
 				self.utility(x, "SyntaxERROR, it should be a '}'\n")
-		qplwriter.writeLabel(labelifend)
+		self.qplwriter.writeLabel(labelifend)
 		self.utility(x, "</ifStatement>\n")
 
 	def CompileWhile(self, x):
@@ -827,15 +869,15 @@ class CompilationEngine:
 				self.utility(x, "SyntaxERROR, it should be a '('\n")
 			labelbeginname = self.now_turn_function_name + "while_begin_" + str(self.now_whilenum)
 			labelendname = self.now_turn_function_name + "while_end_" + str(self.now_whilenum)
-			qplwriter.writeLabel(labelbeginname)
+			self.qplwriter.writeLabel(labelbeginname)
 			self.CompileExpression(x+1)
 			next1 = self.tokenizer.LL1()
 			if(next1 == ")"):
 				self.Advance(x+1)  # ')'
 			else:
 				self.utility(x, "SyntaxERROR, it should be a ')'\n")
-			value = "TMP" + str(qplwriter.tempnum-1)
-			qplwriter.writeJmp(3, "-", labelendname, value)
+			value = "TMP" + str(self.qplwriter.tempnum-1)
+			self.qplwriter.writeJmp(3, "-", labelendname, value)
 
 			next1 = self.tokenizer.LL1()
 			if(next1 == "{"):
@@ -846,7 +888,7 @@ class CompilationEngine:
 			while(next1 != "}"):
 				self.CompileStatement(x+1)
 				next1 = self.tokenizer.LL1()
-			qplwriter.writeGoto(labelbeginname)
+			self.qplwriter.writeGoto(labelbeginname)
 			if(next1 == "}"):
 				self.Advance(x+1)  # '}'
 			else:
@@ -860,7 +902,7 @@ class CompilationEngine:
 				self.utility(x, "SyntaxERROR, it should be a '{'\n")
 			next1 = self.tokenizer.LL1()
 			labelbeginname = self.now_turn_function_name + "while_begin_" + str(self.now_whilenum)
-			qplwriter.writeLabel(labelbeginname)
+			self.qplwriter.writeLabel(labelbeginname)
 			while(next1 != "}"):
 				self.CompileStatement(x+1)
 				next1 = self.tokenizer.LL1()
@@ -875,8 +917,8 @@ class CompilationEngine:
 			else:
 				self.utility(x, "SyntaxERROR, it should be a '('\n")
 			self.CompileExpression(x+1)
-			value = "TMP" + str(qplwriter.tempnum - 1)
-			qplwriter.writeJmp(3, labelbeginname, "-", value)
+			value = "TMP" + str(self.qplwriter.tempnum - 1)
+			self.qplwriter.writeJmp(3, labelbeginname, "-", value)
 			next1 = self.tokenizer.LL1()
 			if(next1 == ")"):
 				self.Advance(x+1)  # ')'
@@ -897,9 +939,9 @@ class CompilationEngine:
 		next1 = self.tokenizer.LL1()
 		if(next1 != ";"):
 			self.CompileExpression(x+1)
-			qplwriter.writeReturn()
+			self.qplwriter.writeReturn()
 		else:
-			qplwriter.writeReturn(False)
+			self.qplwriter.writeReturn(False)
 		self.Advance(x+1)  # ';'
 		self.utility(x, "</returnStatement>\n")
 	# 估计有bug
@@ -924,9 +966,9 @@ class CompilationEngine:
 					self.CompileStatement(x+1)
 				elif(i == 1):
 					self.CompileExpression(x+1)
-					value = "TMP" + str(qplwriter.tempnum-1)
-					qplwriter.writeLabel(labelforjudge)
-					qplwriter.writeJmp(3, labelforbegin, labelforend, value)
+					value = "TMP" + str(self.qplwriter.tempnum-1)
+					self.qplwriter.writeLabel(labelforjudge)
+					self.qplwriter.writeJmp(3, labelforbegin, labelforend, value)
 					self.Advance(x+1)  #';'
 				nextt = self.tokenizer.LL1type()
 				next1 = self.tokenizer.LL1()
@@ -937,7 +979,7 @@ class CompilationEngine:
 			else:
 				self.utility(x,"ERROR\n")
 		# for 第三项
-		qplwriter.writeLabel(labelforstart)
+		self.qplwriter.writeLabel(labelforstart)
 		nextt = self.tokenizer.LL1type()
 		next1 = self.tokenizer.LL1()
 		if (nextt == "INT_CONST" or nextt == "FLOAT_CONST" or nextt == "CHAR_CONST" or nextt == "STRING_CONST" or nextt == "BOOL_CONST" or nextt == "IDENTIFIER"
@@ -947,13 +989,13 @@ class CompilationEngine:
 			self.Advance(x+1)  #')'
 		else:
 			self.utility(x,"SyntaxERROR, it should be a ')'\n")
-		qplwriter.writeGoto(labelforjudge)
+		self.qplwriter.writeGoto(labelforjudge)
 		next1 = self.tokenizer.LL1()
 		if(next1 == "{"):
 			self.Advance(x+1)  # '{'
 		else:
 			self.utility(x, "SyntaxERROR, it should be a '{'\n")
-		qplwriter.writeLabel(labelforbegin)
+		self.qplwriter.writeLabel(labelforbegin)
 		next1 = self.tokenizer.LL1()
 		while (next1 != "}"):
 			self.CompileStatement(x + 1)
@@ -962,8 +1004,8 @@ class CompilationEngine:
 			self.Advance(x+1)  # '}'
 		else:
 			self.utility(x, "SyntaxERROR, it should be a '}'\n")
-		qplwriter.writeGoto(labelforstart)
-		qplwriter.writeLabel(labelforend)
+		self.qplwriter.writeGoto(labelforstart)
+		self.qplwriter.writeLabel(labelforend)
 		self.utility(x,"</forStatement>\n")
 	#check PM, 3.22
 	def CompileDo(self, x):
@@ -981,14 +1023,14 @@ class CompilationEngine:
 		next1 = self.tokenizer.LL1()
 		if(next1 == "{"):
 			self.Advance(x+1)  #' {'
-			qplwriter.writeinout(1)
+			self.qplwriter.writeinout(1)
 		else:
 			self.utility(x,"SyntaxERROR, it should be a '{'\n")
 		self.CompileBodyDecl(x+1)
 		next1 = self.tokenizer.LL1()
 		if(next1 == "}"):
 			self.Advance(x+1)  #  '}'
-			qplwriter.writeinout(2)
+			self.qplwriter.writeinout(2)
 		else:
 			self.utility(x, "SyntaxERROR, it should be a '}'\n")
 		self.utility(x,"</blockStatement>\n")
@@ -1001,7 +1043,7 @@ class CompilationEngine:
 		else:
 			self.utility(x, "SyntaxERROR, it should be a 'goto'\n")
 		labelname = self.utility2()[1]
-		qplwriter.writeGoto(labelname)
+		self.qplwriter.writeGoto(labelname)
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			self.Advance(x+1)  # label
@@ -1045,14 +1087,14 @@ class CompilationEngine:
 				operatorname = self.utility2()[1]
 				self.Advance(x+1)  # op
 				if(termnum != 1):
-					term1 = "TMP" + str(qplwriter.tempnum-1)
+					term1 = "TMP" + str(self.qplwriter.tempnum-1)
 				term2 = self.CompileTerm(x+1)
-				qplwriter.writearyop(operatorname, term1, term2)
+				self.qplwriter.writearyop(operatorname, term1, term2)
 				termnum = termnum + 1
 				next1 = self.tokenizer.LL1()
 			elif(next1 in ["]",",",";", ")"]):
 				if(termnum == 1):
-					qplwriter.writelet(sender=term1)
+					self.qplwriter.writelet(sender=term1)
 				break
 			else:
 				self.utility(x,"SyntaxERROR, unrecognized token: {} in expression\n".format(next1))
@@ -1085,23 +1127,25 @@ class CompilationEngine:
 				self.Advance(x + 1)  # ")"
 			else:
 				self.utility(x+1, "SyntaxError,it should be a ')'\n")
-			now = "TMP" + str(qplwriter.tempnum-1)
+			now = "TMP" + str(self.qplwriter.tempnum-1)
 		elif(next1 in ["-","+","!", "&","*"]):   #  -> leftunaryOp term
 			unaryopname = self.utility2()[1]
 			self.Advance(x+1)
 			lastterm = self.CompileTerm(x+1)
-			qplwriter.writeunaryop(unaryopname, lastterm)
-			now = "TMP" + str(qplwriter.tempnum - 1)
+			self.qplwriter.writeunaryop(unaryopname, lastterm)
+			now = "TMP" + str(self.qplwriter.tempnum - 1)
 		elif(next1 in ["++", "--"]):    #  -> leftunaryOp term
 			self.Advance(x + 1)
 			varname = self.CompilevarName(x+1)
-			qplwriter.writeselfop(next1, varname, 1)
+			self.qplwriter.writeselfop(next1, varname, 1)
 		elif(nextt == "IDENTIFIER"):
 			next1 = self.tokenizer.LL(2)
+			if(next1 in [".", "->"]):
+				next1 = self.tokenizer.LL(4)
 			if(next1 in ["++","--"]):   #  -> varName "++" or "--"
 				varname = self.CompilevarName(x + 1)
-				qplwriter.writeselfop(next1, varname, 2)
-				now = "TMP" + str(qplwriter.tempnum - 1)
+				self.qplwriter.writeselfop(next1, varname, 2)
+				now = "TMP" + str(self.qplwriter.tempnum - 1)
 				self.Advance(x+1)
 			elif(next1 == "["):         #  -> varName {'[' expression ']'}+
 				varname = self.CompilevarName(x + 1)
@@ -1110,7 +1154,7 @@ class CompilationEngine:
 					varname  = varname + "["
 					self.Advance(x+1)  # '['
 					self.CompileExpression(x+1)
-					varname = varname + "TMP" + str(qplwriter.tempnum-1)
+					varname = varname + "TMP" + str(self.qplwriter.tempnum-1)
 					next1 = self.tokenizer.LL1()
 					if(next1 == "]"):
 						varname = varname + "]"
@@ -1121,7 +1165,7 @@ class CompilationEngine:
 				now = varname
 			elif(next1 == "("):         #  -> RoutineCall
 				self.CompileRoutineCall(x+1)
-				now = "TMP" + str(qplwriter.tempnum - 1)
+				now = "TMP" + str(self.qplwriter.tempnum - 1)
 										#  -> varName
 			elif(next1 in self.arithop or next1 in self.cmpop or next1 in [";", ")", ",", "]"]):
 				varname = self.CompilevarName(x + 1)
@@ -1130,6 +1174,8 @@ class CompilationEngine:
 			else:  #报错
 				self.Advance(x + 1)
 				self.utility(x+1, "SyntaxError,Unrecognized word in Term: {}\n".format(next1))
+		else:
+			self.utility(x+1, "SyntaxERROR: {} is not a term\n".format(next1))
 		self.utility(x,"</term>\n")
 		return now
 
@@ -1165,7 +1211,7 @@ class CompilationEngine:
 		if(next1 in ["(", "++", "--","-","+","!","&","*"] or nextt in ["INT_CONST","FLOAT_CONST","CHAR_CONST","STRING_CONST","BOOL_CONST","IDENTIFIER"]):
 			self.CompileExpression(x+1)
 			expressionnum = expressionnum + 1
-			qplwriter.writepassparams(expressionnum)
+			self.qplwriter.writepassparams(expressionnum)
 			next1 = self.tokenizer.LL1()
 			while(True):
 				if(next1 == ','):
@@ -1176,7 +1222,7 @@ class CompilationEngine:
 					self.utility(x,"SyntaxERROR, it should be a ',' or ')'")
 				self.CompileExpression(x+1)
 				expressionnum = expressionnum + 1
-				qplwriter.writepassparams(expressionnum)
+				self.qplwriter.writepassparams(expressionnum)
 				next1 = self.tokenizer.LL1()
 		elif(next1 == ")"):
 			pass
@@ -1187,6 +1233,7 @@ class CompilationEngine:
 	# check PM,3.22
 	def CompileRoutineCall(self, x):
 		self.utility(x,"<routineCall>\n")
+		callname = ""
 		nextt = self.tokenizer.LL1type()
 		if(nextt == "IDENTIFIER"):
 			callname = self.CompilevarName(x+1)  # '函数名'
@@ -1199,30 +1246,30 @@ class CompilationEngine:
 			self.utility(x,"SyntaxError,it should be a '('\n")
 		expressionnum = self.CompileExpressionList(x+1)
 		if(callname == "printf"):
-			qplwriter.writePrintf(expressionnum)
+			self.qplwriter.writePrintf(expressionnum)
 		elif(callname == "scanf"):
-			qplwriter.writeScanf(expressionnum)
+			self.qplwriter.writeScanf(expressionnum)
 		# rand()
 		# Sleep()
 		# kbhit()  检测键盘是否有输入
 		# getch()
 		# system()
 		elif(callname == "rand"):
-			qplwriter.writeRand(expressionnum)
+			self.qplwriter.writeRand(expressionnum)
 		elif(callname == "srand"):
-			qplwriter.writeSrand(expressionnum)
-		elif(callname == "sleep"):
-			qplwriter.writeSleep(expressionnum)
+			self.qplwriter.writeSrand(expressionnum)
+		elif(callname == "Sleep"):
+			self.qplwriter.writeSleep(expressionnum)
 		elif(callname == "kbhit"):
-			qplwriter.writeKbhit(expressionnum)
+			self.qplwriter.writeKbhit(expressionnum)
 		elif(callname == "getch"):
-			qplwriter.writeGetch(expressionnum)
+			self.qplwriter.writeGetch(expressionnum)
 		elif(callname == "system"):
-			qplwriter.writeSystem(expressionnum)
+			self.qplwriter.writeSystem(expressionnum)
 		elif(callname == "time"):
-			qplwriter.writeTime(expressionnum)
+			self.qplwriter.writeTime(expressionnum)
 		else:
-			qplwriter.writeCall(callname, expressionnum)
+			self.qplwriter.writeCall(callname, expressionnum)
 		next1 = self.tokenizer.LL1()
 		if(next1 == ')'):
 			self.Advance(x+1)  # ')'
@@ -1230,30 +1277,19 @@ class CompilationEngine:
 			self.utility(x,"SyntaxError,it should be a ')'\n")
 		self.utility(x,"</routineCall>\n")
 
-
-os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser")
-from Clexer_v4 import C_Lexer
-from SymbolTable import SymbolTable
-from QuadrupleWriter import QuadrupleWriter
 if __name__ == '__main__':
-	os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser\test")
-	file = "test1.c"
+	# os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser\workspace")
+	file = sys.argv[1]
 
 	obj = C_Lexer(file)
 	obj.preScanner()
 	obj.preAnalyzer()
 	obj.analyzer()
 
-	#全局符号表
-	symboltable = SymbolTable()
-	#四元式打印机
-	qplwriter = QuadrupleWriter(obj.fname)
-
 	parser = CompilationEngine(obj)
 	parser.CompileProgram()
 	parser.__del__()
 
-
-# goto1: SyntaxERROR
-#
-# goto2: SemanticsERROR
+	#四元式解释器
+	# qplinterpreter = QuadrupleInterpreter(obj.fname, parser.qplwriter.quadruple_list, parser.func_varia)
+	# qplinterpreter.main()
