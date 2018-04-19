@@ -3,6 +3,8 @@ import os
 import defaultFile
 from Clexer_v4 import C_Lexer
 from Cparser import CompilationEngine
+from QuadrupleWriter import QuadrupleWriter
+from QR2PY import QuadrupleInterpreter
 class MainWindow(wx.Frame):
 	def __init__(self, parent, title):
 		wx.Frame.__init__(self, parent, title = title, size = (450,620))
@@ -15,8 +17,10 @@ class MainWindow(wx.Frame):
 
 		# 文件栏
 		hwItem = filemenu.Append(wx.ID_FILE1, u"HelloWorld!", u"编译预定义源程序")
-		msItem = filemenu.Append(wx.ID_FILE2, u"归并排序", u"编译预定义源程序")
+		qsItem = filemenu.Append(wx.ID_FILE2, u"快速排序", u"编译预定义源程序")
 		tetrisItem = filemenu.Append(wx.ID_FILE3, u"俄罗斯方块", u"编译预定义源程序")
+		snakeItem = filemenu.Append(wx.ID_FILE4, u"贪吃蛇", u"编译预定义源程序")
+
 		filemenu.AppendSeparator()
 		openItem = filemenu.Append(wx.ID_OPEN, u"打开文件", u"请选择打开符合编译器语法规则C语言程序")
 		exitItem = filemenu.Append(wx.ID_EXIT, u"退出", u"退出程序")
@@ -48,8 +52,9 @@ class MainWindow(wx.Frame):
 
 		# 绑定事件处理
 		self.Bind(wx.EVT_MENU, self.OnDefaultFilehw, hwItem)
-		self.Bind(wx.EVT_MENU, self.OnDefaultFilems, msItem)
+		self.Bind(wx.EVT_MENU, self.OnDefaultFileqs, qsItem)
 		self.Bind(wx.EVT_MENU, self.OnDefaultFiletetris, tetrisItem)
+		self.Bind(wx.EVT_MENU, self.OnDefaultFilesnake, snakeItem)
 		self.Bind(wx.EVT_MENU, self.OnOpen, openItem)
 		self.Bind(wx.EVT_MENU, self.OnExit, exitItem)
 
@@ -74,17 +79,23 @@ class MainWindow(wx.Frame):
 		self.nowfile = "helloworld.c"
 		self.control.SetValue(defaultFile.helloworldfile)
 
-	def OnDefaultFilems(self, event):
-		fout = open("mergesort.c", "w", encoding = "utf-8")
-		self.nowfile = "mergesort.c"
-		fout.write(defaultFile.mergesortfile)
-		self.control.SetValue(defaultFile.mergesortfile)
+	def OnDefaultFileqs(self, event):
+		fout = open("quicksort.c", "w", encoding = "utf-8")
+		self.nowfile = "quicksort.c"
+		fout.write(defaultFile.quicksortfile)
+		self.control.SetValue(defaultFile.quicksortfile)
 
 	def OnDefaultFiletetris(self, event):
 		fout = open("tetris.c", "w", encoding = "utf-8")
 		self.nowfile = "tetris.c"
 		fout.write(defaultFile.tetrisfile)
 		self.control.SetValue(defaultFile.tetrisfile)
+
+	def OnDefaultFilesnake(self, event):
+		fout = open("snake.c", "w", encoding = "utf-8")
+		self.nowfile = "snake.c"
+		fout.write(defaultFile.snakefile)
+		self.control.SetValue(defaultFile.snakefile)
 
 	def OnOpen(self, event):
 		self.dirname = ''
@@ -138,16 +149,41 @@ class MainWindow(wx.Frame):
 			parser.__del__()
 			fsys = open(parser.qplwriter.foutname, "r", encoding="utf-8")
 			self.control.SetValue(fsys.read())
-			print(fsys.read())
-
 		else:
 			pass
 
 	def OnInterpreter(self, event):
-		pass
+		if(self.nowfile != ""):
+			lexer = C_Lexer(self.nowfile)
+			lexer.preScanner()
+			lexer.preAnalyzer()
+			lexer.analyzer()
+			parser = CompilationEngine(lexer)
+			parser.CompileProgram()
+			parser.__del__()
+			qplinterpreter = QuadrupleInterpreter(lexer.fname, parser.qplwriter.quadruple_list, parser.func_varia)
+			qplinterpreter.main()
+			qplinterpreter.__del__()
+			fipt= open(qplinterpreter.foutname, "r", encoding="utf-8")
+			self.control.SetValue(fipt.read())
+		else:
+			pass
 
 	def OnPython(self, event):
-		pass
+		if(self.nowfile != ""):
+			lexer = C_Lexer(self.nowfile)
+			lexer.preScanner()
+			lexer.preAnalyzer()
+			lexer.analyzer()
+			parser = CompilationEngine(lexer)
+			parser.CompileProgram()
+			parser.__del__()
+			qplinterpreter = QuadrupleInterpreter(lexer.fname, parser.qplwriter.quadruple_list, parser.func_varia)
+			qplinterpreter.main()
+			qplinterpreter.__del__()
+			os.system("python3\python.exe " + qplinterpreter.foutname)
+		else:
+			pass
 
 
 	# 关于栏bind函数
@@ -170,6 +206,7 @@ class MainWindow(wx.Frame):
 		dlg = wx.MessageDialog(self, defaultFile.aboutus, "关于", wx.OK)
 		dlg.ShowModal()
 		dlg.Destroy()
+
 app = wx.App(False) #创建1个APP，禁用stdout/stderr重定向
 frame = MainWindow(None,  "C-语言编译器")  #这是一个顶层的window
 app.MainLoop()
