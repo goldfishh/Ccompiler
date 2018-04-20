@@ -1,8 +1,8 @@
 import os
-import sys
 
 from Clexer_v4 import C_Lexer
 from SymbolTable import SymbolTable
+from SemanticsParser import SemanticsParser
 from QuadrupleWriter import QuadrupleWriter
 from QR2PY import QuadrupleInterpreter
 
@@ -202,7 +202,7 @@ class CompilationEngine:
 		if(nextt == "IDENTIFIER"):
 			thisdict['vname'] = self.utility2()[1]
 			if (self.symboltable.lookup_variable(findvname=thisdict['vname'], ftype=1)):
-				self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thisdict['vname']))  #E7
+				self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thisdict['vname']))  #E7
 			self.Advance(x+1)  # varName
 		else:
 			self.utility(x, "SyntaxERROR, it should be an identifier\n")  #E8
@@ -243,7 +243,7 @@ class CompilationEngine:
 			thisdict['weidu'] = weidu
 		paramslist.append(thisdict)
 		# self.qplwriter.writereceiveparams(thisdict['vname'])
-		self.symboltable.insert(thisdict['vname'], thisdict, 1)
+		# self.symboltable.insert(thisdict['vname'], thisdict, 1)
 		self.symboltable.insert(thisdict['vname'], thisdict, 2)
 		next1 = self.tokenizer.LL1()
 		while(next1 == ","):
@@ -263,7 +263,7 @@ class CompilationEngine:
 			if (nextt == "IDENTIFIER"):
 				thisdict2['vname'] = self.utility2()[1]
 				if (self.symboltable.lookup_variable(findvname=thisdict2['vname'], ftype=1)):
-					self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thisdict2['vname']))
+					self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thisdict2['vname']))
 				self.Advance(x + 1)  # varName
 			else:
 				self.utility(x, "SyntaxERROR, it should be an identifier\n")
@@ -303,7 +303,7 @@ class CompilationEngine:
 						next1 = self.tokenizer.LL1()
 				thisdict2['weidu'] = weidu
 			paramslist.append(thisdict2)
-			self.symboltable.insert(thisdict2['vname'], thisdict2, 1)
+			# self.symboltable.insert(thisdict2['vname'], thisdict2, 1)
 			self.symboltable.insert(thisdict['vname'], thisdict, 2)
 			# self.qplwriter.writereceiveparams(thisdict2['vname'])
 			next1 = self.tokenizer.LL1()
@@ -330,11 +330,13 @@ class CompilationEngine:
 			self.Advance(x+1)  # '{'
 			vdict = dict()
 			nextt = self.tokenizer.LL1type()
+			# 枚举内变量名
 			va = self.utility2()[1]
 			if (nextt != "IDENTIFIER"):
 				self.utility(x + 1, "SyntaxERROR: It should be an identifier\n")
 			self.Advance(x+1)  # varName
 			next1 = self.tokenizer.LL1()
+			# 对应值
 			pt = 0
 			if (next1 == "="):
 				self.Advance(x + 1)  # "="
@@ -371,7 +373,7 @@ class CompilationEngine:
 				vdict[va] = vv
 				next1 = self.tokenizer.LL1()
 			# insert to self.symboltable
-			self.symboltable.insert(vname, vdict)
+			self.symboltable.insert(vname, vdict, 5)
 			next1 = self.tokenizer.LL1()
 			if(next1 != "}"):
 				self.utility(x + 1, "SyntaxERROR: It should be an '}'\n")
@@ -433,7 +435,7 @@ class CompilationEngine:
 		starnum = 0
 		while(next1 == "*"):
 			starnum = starnum + 1  # 加入函数表
-			self.Advance(x+1)  #"*"
+			self.Advance(x+1)  # "*"
 			next1 = self.tokenizer.LL1()
 		content['return_type_starnum'] = starnum
 		nextt = self.tokenizer.LL1type()
@@ -441,7 +443,7 @@ class CompilationEngine:
 			function_name = self.utility2()[1]
 			self.cur_func = function_name
 			self.now_turn_function_name = function_name
-			self.Advance(x+1)  #routineName
+			self.Advance(x+1)  # routineName
 		else:
 			self.utility(x, "SyntaxERROR, it should be an identifier\n")
 		next1 = self.tokenizer.LL1()
@@ -450,11 +452,11 @@ class CompilationEngine:
 		else:
 			self.utility(x, "SyntaxERROR, it should be '('\n")
 		next1 = self.tokenizer.LL1()
-		
+
 		# 符号表维护
 		self.symboltable.variableStackPointer.append(self.symboltable.variableStackIterator)
 		self.symboltable.variableStackPointerIterator = self.symboltable.variableStackPointerIterator + 1
-		
+
 		if(next1 in self.ADtype or next1 in self.AStype):
 			content['paramslist'] = self.CompileParameterList(x+1)
 			self.Advance(x+1)  # ")"
@@ -472,7 +474,9 @@ class CompilationEngine:
 				self.utility(x+1, "SemanticsERROR: Redefine function: {}\n".format(function_name))
 			else:
 				self.symboltable.insert(function_name, content, 1)
-			# exit 1
+			# 符号表维护
+			self.symboltable.variableStackPointer.pop(-1)
+			self.symboltable.variableStackPointerIterator = self.symboltable.variableStackPointerIterator - 1
 
 		elif(next1 == "{"):
 			original_content = self.symboltable.lookup(function_name, 1)
@@ -489,16 +493,15 @@ class CompilationEngine:
 				self.symboltable.insert(function_name, content, 1)
 				self.CompileBodyDecl(x + 1)
 			elif(not original_content['isused']):
-				# DEBUG
 				# 与之前的content比较, 语义分析
 				if(content == original_content):
 					self.symboltable.update(1, function_name, 3, True)
-					self.CompileBodyDecl(x+1)
 				else:
 					self.utility(x+1, "SemanticsERROR: The definition of function: {} is not matched correctly\n".format(function_name))
+				self.CompileBodyDecl(x + 1)
 			else:
 				self.utility(x+1, "SemanticsERROR: Redefine function: {}\n".format(function_name))
-			# exit 2
+				self.CompileBodyDecl(x + 1)
 		else:
 			self.utility(x, "SyntaxERROR, unrecognizing token in functiondecl\n")
 		self.now_turn_function_name = ""
@@ -523,7 +526,7 @@ class CompilationEngine:
 		if(nextt == "IDENTIFIER"):
 			thivaria['vname'] = self.utility2()[1]
 			if(self.symboltable.lookup_variable(findvname = thivaria['vname'], ftype = 1)):
-				self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thivaria['vname']))
+				self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thivaria['vname']))
 			#else: insert
 
 			self.Advance(x+1)  # varName
@@ -588,7 +591,7 @@ class CompilationEngine:
 			if (nextt == "IDENTIFIER"):
 				thivariab['vname'] = self.utility2()[1]
 				if (self.symboltable.lookup_variable(findvname=thivariab['vname'], ftype=1)):
-					self.utility(x, "SemanticsERROR, Redefining the variable: {}\n".format(thivariab['vname']))
+					self.utility(x, "SemanticsERROR, Redifining the variable: {}\n".format(thivariab['vname']))
 				# else: insert
 
 				self.Advance(x + 1)  # varName
@@ -1278,8 +1281,8 @@ class CompilationEngine:
 		self.utility(x,"</routineCall>\n")
 
 if __name__ == '__main__':
-	# os.chdir(r"C:\Users\goldfish\PycharmProjects\Cparser\workspace")
-	file = sys.argv[1]
+	os.chdir(r"C:\Users\goldfish\Desktop\编译课设\语义分析")
+	file = "error2.c"
 
 	obj = C_Lexer(file)
 	obj.preScanner()
@@ -1290,6 +1293,10 @@ if __name__ == '__main__':
 	parser.CompileProgram()
 	parser.__del__()
 
+	obj.word_iterator = 0
+
+	SEParser = SemanticsParser(obj)
+	SEParser.main()
 	#四元式解释器
-	# qplinterpreter = QuadrupleInterpreter(obj.fname, parser.qplwriter.quadruple_list, parser.func_varia)
-	# qplinterpreter.main()
+	qplinterpreter = QuadrupleInterpreter(obj.fname, parser.qplwriter.quadruple_list, parser.func_varia)
+	qplinterpreter.main()
